@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>3D 虛擬數學中樞 - 正餘弦定理</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+/* 引入科技感字體 */
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+body {
+margin: 0;
+font-family: 'Share Tech Mono', 'Segoe UI', sans-serif;
+background: #1e222a; /* 護眼深藍灰背景 */
+color: #bac2de;      /* 柔和文字色 */
+font-size: 18px;
+overflow-x: hidden;
+}
+/* 導覽列 - 柔和毛玻璃風格 */
+.navbar {
+position: fixed;
+top: 0;
+width: 100%;
+background: rgba(30, 34, 42, 0.75);
+backdrop-filter: blur(12px);
+-webkit-backdrop-filter: blur(12px);
+border-bottom: 1px solid rgba(137, 180, 250, 0.2);
+box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+z-index: 1000;
+height: 50px;
+line-height: 50px;
+}
+.navbar a {
+float: left;
+color: #89b4fa;
+padding: 0 20px;
+text-decoration: none;
+text-transform: uppercase;
+letter-spacing: 1px;
+text-shadow: 0 0 5px rgba(137, 180, 250, 0.3);
+transition: 0.3s;
+}
+.navbar a:hover {
+background: rgba(137, 180, 250, 0.1);
+color: #cdd6f4;
+text-shadow: 0 0 8px rgba(205, 214, 244, 0.6);
+}
+.dropdown { float: left; }
+.dropbtn {
+background: none; border: none; color: #89b4fa; padding: 0 20px; cursor: pointer;
+font-size: 16px; line-height: 50px; font-family: 'Share Tech Mono', monospace;
+text-shadow: 0 0 5px rgba(137, 180, 250, 0.3); transition: 0.3s;
+}
+.dropdown-content {
+display: none; position: absolute; background: rgba(20, 23, 30, 0.95);
+border: 1px solid rgba(137, 180, 250, 0.2); border-top: none;
+box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+min-width: 160px; backdrop-filter: blur(12px); border-radius: 0 0 8px 8px; overflow: hidden;
+}
+.dropdown-content a { display: block; padding: 12px 20px; color: #7dcfff; text-shadow: none;}
+.dropdown-content a:hover { background: rgba(125, 207, 255, 0.15); color: #ffffff; }
+.dropdown:hover .dropdown-content { display: block; }
+.dropdown:hover .dropbtn { background: rgba(137, 180, 250, 0.1); color: #cdd6f4; }
+/* 主軌道容器 */
+#track-container {
+width: 100%; height: 60vh; margin-top: 50px;
+border-bottom: 2px solid rgba(137, 180, 250, 0.4);
+box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+/* 下方教學內容 */
+#lesson {
+padding: 40px 20px;
+background: transparent;
+max-width: 1200px;
+margin: 0 auto;
+}
+h1, h2, h3 { color: #89b4fa; text-shadow: 0 0 8px rgba(137, 180, 250, 0.4); letter-spacing: 1px; }
+h1 { border-left: 4px solid #bb9af7; padding-left: 10px; color: #cdd6f4; }
+ul { margin-left: 0; padding-left: 20px; color: #a6adc8; }
+li { margin-bottom: 8px; }
+.lesson-row {
+display: flex; justify-content: center; align-items: flex-start;
+gap: 30px; margin-bottom: 40px; flex-wrap: wrap; margin-top: 40px;
+}
+/* 任務卡片化設計 (Quest Card) */
+.lesson-left, .lesson-col {
+background: rgba(125, 207, 255, 0.03);
+border: 1px solid rgba(125, 207, 255, 0.15);
+padding: 25px;
+border-radius: 8px;
+box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+.lesson-left { flex: 1 1 400px; }
+.lesson-col { flex: 1 1 300px; }
+.lesson-center { text-align: center; }
+blockquote {
+border-left: 4px solid #bb9af7;
+background: rgba(187, 154, 247, 0.08);
+margin: 1.5em 0; padding: 1em 1.2em;
+color: #bb9af7; font-weight: bold;
+text-shadow: 0 0 5px rgba(187, 154, 247, 0.3);
+border-radius: 0 8px 8px 0;
+}
+/* 滑桿與輸入元件科技化 */
+input[type=range] {
+width: 80%; accent-color: #7dcfff; cursor: pointer;
+}
+.angle-display { font-weight: bold; margin-top: 10px; color: #bb9af7; }
+.value-highlight { color: #7dcfff; font-weight: bold; text-shadow: 0 0 8px rgba(125, 207, 255, 0.4); }
+/* 繪圖與互動區塊 */
+svg, canvas {
+background: rgba(20, 23, 30, 0.75);
+border: 1px solid rgba(137, 180, 250, 0.2);
+box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+border-radius: 8px;
+}
+#track-demo {
+border: 1px solid rgba(137, 180, 250, 0.2);
+border-radius: 8px;
+overflow: hidden;
+box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* ========================================== */
+/* 🧩 新增：自由拖曳遊戲 UI 整合樣式 */
+/* ========================================== */
+.game-container {
+display: flex;
+gap: 25px;
+margin-top: 30px;
+flex-wrap: wrap;
+width: 100%;
+}
+.game-canvas-area {
+flex: 1 1 500px;
+position: relative;
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+#gameGeoCanvas {
+background: rgba(20, 23, 30, 0.85);
+border: 2px solid rgba(137, 180, 250, 0.3);
+cursor: crosshair;
+max-width: 100%;
+}
+.game-hint {
+font-size: 14px;
+color: #a6adc8;
+margin-bottom: 10px;
+text-align: center;
+background: rgba(30, 34, 42, 0.6);
+padding: 6px 15px;
+border-radius: 20px;
+border: 1px solid rgba(137, 180, 250, 0.1);
+}
+.game-panel {
+flex: 1 1 400px;
+background: rgba(20, 23, 30, 0.5);
+border: 1px solid rgba(137, 180, 250, 0.2);
+border-radius: 8px;
+display: flex;
+flex-direction: column;
+overflow: hidden;
+box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+.game-tabs {
+display: flex;
+background: rgba(15, 17, 23, 0.9);
+border-bottom: 1px solid rgba(137, 180, 250, 0.2);
+}
+.game-tab {
+flex: 1; padding: 15px; text-align: center; cursor: pointer;
+font-weight: bold; color: #6c7086; transition: all 0.3s;
+font-size: 16px;
+}
+.game-tab.active {
+color: #7dcfff; background: rgba(30, 34, 42, 0.5);
+border-bottom: 3px solid #7dcfff;
+text-shadow: 0 0 8px rgba(125, 207, 255, 0.5);
+}
+.game-content { padding: 25px; }
+.game-mission {
+background: rgba(243, 139, 168, 0.05);
+border-left: 4px solid #f38ba8;
+padding: 15px; border-radius: 0 8px 8px 0; margin-bottom: 25px;
+}
+.game-mission h3 { margin: 0 0 8px 0; color: #f38ba8; font-size: 18px; }
+.game-mission p { margin: 0; font-size: 14px; line-height: 1.6; color: #cdd6f4; }
+.game-data-grid {
+display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px;
+}
+.game-card {
+background: rgba(30, 34, 42, 0.8); padding: 12px; border-radius: 6px;
+border-top: 3px solid #6c7086; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.game-card.c-a { border-top-color: #f38ba8; }
+.game-card.c-b { border-top-color: #89b4fa; }
+.game-card.c-c { border-top-color: #a6e3a1; }
+.game-card div { font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
+.game-card span { font-size: 20px; font-weight: bold; }
+
+.l-a { color: #f38ba8; font-weight: bold; }
+.l-b { color: #89b4fa; font-weight: bold; }
+.l-c { color: #a6e3a1; font-weight: bold; }
+
+.game-formula-box {
+background: rgba(15, 17, 23, 0.8); padding: 20px; border-radius: 8px;
+border: 1px dashed #7dcfff; text-align: center;
+}
+.game-formula-title { font-size: 14px; color: #7dcfff; margin-bottom: 12px; font-weight: bold; text-align: left; }
+.game-math-row { font-size: 18px; margin: 15px 0; font-family: 'Share Tech Mono', monospace; }
+.g-fraction { display: inline-block; vertical-align: middle; text-align: center; margin: 0 6px; }
+.g-top { border-bottom: 1px solid #bac2de; padding-bottom: 2px; }
+.g-bottom { padding-top: 2px; }
+.game-result-text {
+margin-top: 15px; font-size: 14px; color: #a6e3a1;
+background: rgba(166, 227, 161, 0.1); padding: 10px; border-radius: 6px; border-left: 4px solid #a6e3a1;
+}
+
+/* 自定義滾動條 */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #1e222a; }
+::-webkit-scrollbar-thumb { background: #3b4261; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #7dcfff; }
+</style>
+</head>
+<body>
+<div class="navbar">
+<a href="#" onclick="location.href='index.html'"> 首頁 </a>
+<div class="dropdown">
+<button class="dropbtn">數學資料庫  ▼ </button>
+<div class="dropdown-content">
+<a href="#" onclick="location.href='1-sct-homepage.html'">> 三角函數</a>
+<a href="#" onclick="location.href='1-lf-homepage.html'">> 線性函數</a>
+<a href="#" onclick="location.href='game-homepage.html'">> 鐵道系統</a>
+</div>
+</div>
+</div>
+<div id="track-container"></div>
+<div id="lesson">
+<div class="lesson-row">
+<div class="lesson-left">
+<h1>01_ 正弦定理 Law of Sines</h1>
+<h2>你知道正弦定理在說什麼嗎？</h2>
+<p>想像你有一個三角形，不管它長什麼形狀，我們想知道邊長和角度的關係。</p>
+<p>系統演算規則告訴我們：</p>
+blockquote>
+「三角形每一邊的長度，和它對應角的正弦成比例。」
+</blockquote>
+<ul>
+<li><strong>a / sinA = b / sinB = c / sinC</strong></li>
+<li>a, b, c：三角形的邊長</li>
+<li>A, B, C：對應的角度</li>
+</ul>
+<h3>生活化比喻</h3>
+<p>想像三個節點站形成一個網路拓撲：<br>
+- 每個節點對應一個角（A, B, C）<br>
+- 節點間的傳輸距離就是邊長（a, b, c）</p>
+blockquote>
+「傳輸距離 ÷ 面對角的正弦值 都會得到相同的常數。」
+</blockquote>
+<p>換句話說，角度越大，對應的傳輸距離就越長！</p>
+</div>
+</div>
+<div class="lesson-row">
+<div class="lesson-col">
+<h2>參數控制面板</h2>
+<p>公式：a / sinA = b / sinB = c / sinC = <span class="value-highlight">2R</span></p>
+
+<div class="angle-display">θ 角度 = <span id="thetaValue" class="value-highlight">37</span>°</div>
+<input type="range" id="angleSlider" min="10" max="70" value="37">
+<p style="margin-top:20px;">
+<label><input type="checkbox" id="toggleCircle" checked> 顯示外接圓邊界</label><br>
+<label><input type="checkbox" id="toggleRadius"> 顯示半徑 R</label>
+</p>
+
+<div style="background:rgba(20,23,30,0.8); padding:15px; border-radius:5px; border: 1px solid rgba(137,180,250,0.1);">
+sinθ = <span id="sinValue" class="value-highlight"></span><br>
+cosθ = <span id="cosValue" class="value-highlight"></span><br>
+tanθ = <span id="tanValue" class="value-highlight"></span>
+</div>
+</div>
+<div class="lesson-col lesson-center">
+<svg width="100%" height="300" viewBox="0 0 420 300" style="overflow: visible;">
+<polygon id="triangleShape" fill="none" stroke="#7dcfff" stroke-width="3" filter="drop-shadow(0 0 4px rgba(125,207,255,0.6))"/>
+<path id="angleArc" fill="none" stroke="#bb9af7" stroke-width="3" filter="drop-shadow(0 0 4px rgba(187,154,247,0.6))"/>
+<circle id="circumCircle" fill="none" stroke="#89b4fa" stroke-width="2" stroke-dasharray="5,5" opacity="0.7"/>
+<circle id="centerPoint" r="4" fill="#f38ba8"/>
+<line id="radiusLine" stroke="#a6e3a1" stroke-width="2"/>
+<text id="radiusText" fill="#a6e3a1" font-size="14" font-family="Share Tech Mono"></text>
+<text id="thetaText" fill="#bb9af7" font-size="16" font-weight="bold" font-family="Share Tech Mono"></text>
+<text x="20" y="180" fill="#bac2de" font-family="Share Tech Mono">對邊</text>
+<text x="140" y="260" fill="#bac2de" font-family="Share Tech Mono">鄰邊</text>
+<text x="130" y="150" fill="#bac2de" font-family="Share Tech Mono">斜邊</text>
+</svg>
+</div>
+<div class="lesson-col lesson-center" style="padding:0; border:none; background:transparent; box-shadow:none;">
+<div id="track-demo" style="width:100%; height:300px;"></div>
+</div>
+</div>
+<hr style="border:1px solid rgba(137, 180, 250, 0.15); margin: 60px 0;">
+<div class="lesson-row">
+<div class="lesson-left">
+<h1>02_ 餘弦定理 Law of Cosines</h1>
+<h2>處理非直角狀態的核心協議</h2>
+<p>餘弦定理是正弦定理的擴展模組，專門用來處理「非直角三角形」的空間解析。</p>
+blockquote>
+「已知兩邊長與其夾角，或想反推未知邊長，即可呼叫餘弦定理來計算。」
+</blockquote>
+<ul>
+<li><strong>c² = a² + b² − 2ab · cosC</strong></li>
+<li>a, b, c：三角形的邊長</li>
+<li>C：邊a與邊b的夾角</li>
+</ul>
+<h3>系統運作比喻</h3>
+<p>將兩邊 a 和 b 想像成機械手臂的兩節：<br>
+- 關節角度越小，兩臂越靠近，第三條連線 c 就越短。<br>
+- 關節角度越大，第三條連線 c 就被拉得越長。</p>
+blockquote>
+「餘弦定理就是用精確的演算法，把角度變形與距離的關係量化出來。」
+</blockquote>
+</div>
+</div>
+<div class="lesson-row">
+<div class="lesson-col">
+<h2>模擬測試器</h2>
+<p>邊長 a：<span id="aValue" class="value-highlight">150</span></p>
+<input type="range" id="aSlider" min="50" max="250" value="150">
+<p>邊長 b：<span id="bValue" class="value-highlight">150</span></p>
+<input type="range" id="bSlider" min="50" max="250" value="150">
+<p>夾角 C：<span id="cAngle" class="value-highlight">60</span>°</p>
+<input type="range" id="cSlider" min="0" max="180" value="60">
+<div style="background:rgba(187,154,247,0.08); border-left:3px solid #bb9af7; padding:15px; margin-top:20px; border-radius:0 5px 5px 0;">
+<h3 style="margin-top:0; color:#cdd6f4;">演算結果</h3>
+邊長 c = <span id="resultC" class="value-highlight" style="font-size:24px;"></span>
+</div>
+</div>
+<div class="lesson-col lesson-center">
+<canvas id="cosCanvas" width="350" height="350" style="width:100%; max-width:350px;"></canvas>
+</div>
+</div>
+
+<hr style="border:1px solid rgba(137, 180, 250, 0.15); margin: 60px 0;">
+<h1>03_ 幾何沙盒：自由解密遊戲</h1>
+<p>現在，輪到你來親手操控了！點擊下方分頁切換武器，並在畫布上任意拖拽頂點，動態觀察公式的秘密。</p>
+
+<div class="game-container">
+    <div class="game-canvas-area">
+        <div class="game-hint">🎮 拖曳頂點 <span class="l-a">A</span>、<span class="l-b">B</span>、<span class="l-c">C</span> 改變形狀，建立邊角連結</div>
+        <canvas id="gameGeoCanvas" width="550" height="400"></canvas>
+    </div>
+
+    <div class="game-panel">
+        <div class="game-tabs">
+            <div class="game-tab active" id="gTabSine" onclick="switchGameTab('sine')">🎯 正弦波束配對</div>
+            <div class="game-tab" id="gTabCosine" onclick="switchGameTab('cosine')">⚓ 餘弦雷達修正</div>
+        </div>
+        
+        <div class="game-content">
+            <div id="gContentSine">
+                <div class="game-mission">
+                    <h3>任務：維持拓撲不變的「常數黃金值」</h3>
+                    <p>不論你如何拉扯三角形，請鎖定下方即時運算出的三個數值。你會震驚地發現，這個比值在大自然中是完全被鎖定、永恆相等的！</p>
+                </div>
+                <div class="game-data-grid">
+                    <div class="game-card c-a">
+                        <div>對邊 a / 對角 A</div>
+                        <span id="g-val-a" class="l-a">0</span> / <span id="g-val-A" class="l-a">0°</span>
+                    </div>
+                    <div class="game-card c-b">
+                        <div>對邊 b / 對角 B</div>
+                        <span id="g-val-b" class="l-b">0</span> / <span id="g-val-B" class="l-b">0°</span>
+                    </div>
+                    <div class="game-card c-c">
+                        <div>對邊 c / 對角 C</div>
+                        <span id="g-val-c" class="l-c">0</span> / <span id="g-val-C" class="l-c">0°</span>
+                    </div>
+                    <div class="game-card" style="border-top-color:#7dcfff;">
+                        <div>外接圓直徑 (2R)</div>
+                        <span id="g-val-2r" style="color:#7dcfff;">0</span>
+                    </div>
+                </div>
+                <div class="game-formula-box">
+                    <div class="game-formula-title">🔮 核心正弦束即時輸出：</div>
+                    <div class="game-math-row">
+                        <div class="g-fraction"><div class="g-top l-a">a</div><div class="g-bottom">sin A</div></div> =
+                        <div class="g-fraction"><div class="g-top l-b">b</div><div class="g-bottom">sin B</div></div> =
+                        <div class="g-fraction"><div class="g-top l-c">c</div><div class="g-bottom">sin C</div></div>
+                    </div>
+                    <div class="game-math-row" style="font-size: 22px; font-weight: bold;">
+                        <span id="g-calc-s-a" class="l-a">0</span> = <span id="g-calc-s-b" class="l-b">0</span> = <span id="g-calc-s-c" class="l-c">0</span>
+                    </div>
+                    <div class="game-result-text">✨ 觀察：三側的傳輸距離與其對向角正弦的比值完全恆等！</div>
+                </div>
+            </div>
+
+            <div id="gContentCosine" style="display: none;">
+                <div class="game-mission">
+                    <h3>任務：非直角手臂的畢氏修正案</h3>
+                    <p>當沒有成對的邊角時，我們以角 A 為核心研究。如果角 A 不是 90°，傳統的畢氏定理就會坍塌，後方需要一條極為精準的「波長補償項」！</p>
+                </div>
+                <div class="game-data-grid">
+                    <div class="game-card c-a">
+                        <div>對邊平方 a²</div>
+                        <span id="g-cos-asq" class="l-a">0</span>
+                    </div>
+                    <div class="game-card" style="border-top-color: #bb9af7;">
+                        <div>夾邊平方和 b²+c²</div>
+                        <span id="g-cos-b2c2" style="color:#bb9af7;">0</span>
+                    </div>
+                    <div class="game-card c-b">
+                        <div>邊長 b</div>
+                        <span id="g-cos-b" class="l-b">0</span>
+                    </div>
+                    <div class="game-card c-c">
+                        <div>邊長 c</div>
+                        <span id="g-cos-c" class="l-c">0</span>
+                    </div>
+                    <div class="game-card" style="grid-column: span 2; border-top-color: #bac2de;">
+                        <div>夾角 A 餘弦值 (cos A)</div>
+                        <span id="g-cos-valA" style="color: #7dcfff;">0</span> (角 A = <span id="g-cos-degA">0°</span>)
+                    </div>
+                </div>
+                <div class="game-formula-box">
+                    <div class="game-formula-title">🔮 修正型協議（餘弦核心）：</div>
+                    <div class="game-math-row" style="font-size: 16px;">
+                        <span class="l-a">a²</span> = <span style="color:#bb9af7;">b² + c²</span> - <span style="color: #ff9e64;">2bc · cos A</span>
+                    </div>
+                    <div class="game-math-row" style="font-size: 18px; font-weight: bold;">
+                        <span id="g-calc-c-left" class="l-a">0</span> = <span id="g-calc-c-base" style="color:#bb9af7;">0</span> - <span id="g-calc-c-modify" style="color: #ff9e64;">0</span>
+                    </div>
+                    <div class="game-result-text" id="g-cos-explanation">💡 提示：試著拉動頂點，把角 A 調整至 90° 試試看！</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+// ==========================================
+// 場景 1: 頂部主雲霄飛車 (護眼現代科幻)
+// ==========================================
+const container = document.getElementById('track-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1e222a);
+scene.fog = new THREE.FogExp2(0x1e222a, 0.0002);
+const renderer = new THREE.WebGLRenderer({ antialias:true, logarithmicDepthBuffer:true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.shadowMap.enabled = true;
+container.appendChild(renderer.domElement);
+const cameraTPV = new THREE.PerspectiveCamera(60, container.clientWidth/container.clientHeight, 1, 20000);
+cameraTPV.position.set(2500,1800,2500);
+const controls = new OrbitControls(cameraTPV, renderer.domElement);
+controls.maxPolarAngle = Math.PI / 2 - 0.05;
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+scene.add(new THREE.AmbientLight(0xcdd6f4, 0.15));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.3);
+dirLight.position.set(1000, 2000, 1000);
+scene.add(dirLight);
+const trainLight = new THREE.PointLight(0x7dcfff, 300000, 1500);
+scene.add(trainLight);
+// 全息網格地面
+const ground = new THREE.Mesh(
+new THREE.PlaneGeometry(20000,20000),
+new THREE.MeshStandardMaterial({color:0x111318, roughness:0.8})
+);
+ground.rotation.x = -Math.PI/2; ground.receiveShadow = true;
+scene.add(ground);
+const gridHelper = new THREE.GridHelper(20000, 100, 0x3b4261, 0x1a1d24);
+gridHelper.position.y = 1;
+scene.add(gridHelper);
+let curve, frames, trackGroup = new THREE.Group();
+const numSamples = 3000;
+scene.add(trackGroup);
+// 摩天輪 (低光害版)
+const ferris = new THREE.Group();
+ferris.add(new THREE.Mesh(
+new THREE.TorusGeometry(400,8,16,100),
+new THREE.MeshStandardMaterial({color:0x292e42, emissive:0x3b4261, emissiveIntensity:0.2})
+));
+for(let i=0;i<12;i++){
+const pod = new THREE.Mesh(
+new THREE.BoxGeometry(60,80,50),
+new THREE.MeshStandardMaterial({
+color:0x292e42, emissive:0xbb9af7, emissiveIntensity:0.2, transparent:true, opacity:0.8
+})
+);
+pod.position.set(Math.cos(i/12*Math.PI*2)*400, Math.sin(i/12*Math.PI*2)*400,0);
+ferris.add(pod);
+}
+ferris.position.set(-2000,600,-1500);
+scene.add(ferris);
+function buildTracks(angleDeg=45){
+while(trackGroup.children.length>0) trackGroup.remove(trackGroup.children[0]);
+const rad = angleDeg*Math.PI/180;
+const pts=[];
+const launchHeight = 120 + (Math.tan(rad)*1500);
+for(let i=0;i<=100;i++){
+const t=i/100, a=t*Math.PI*2;
+const x = Math.sin(a)*1800 + Math.sin(a*2)*250;
+const z = Math.cos(a)*1500;
+let y = (i<=20)?THREE.MathUtils.lerp(120,launchHeight,i/20):Math.max(140, launchHeight*0.45 + Math.sin(a*4)*350);
+pts.push(new THREE.Vector3(x,y,z));
+}
+curve = new THREE.CatmullRomCurve3(pts,true,'centripetal');
+frames = curve.computeFrenetFrames(numSamples,true);
+const railMat = new THREE.MeshStandardMaterial({color:0x292e42, emissive:0x1a1d24, emissiveIntensity:0.1, roughness:0.4, metalness:0.8});
+const tieMat = new THREE.MeshStandardMaterial({color:0x292e42, emissive:0x3b4261, emissiveIntensity:0.3});
+for(let offset of [24,-24]){
+const rPts=[];
+for(let j=0;j<=numSamples;j++) rPts.push(curve.getPointAt(j/numSamples).add(frames.binormals[j].clone().multiplyScalar(offset)));
+trackGroup.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rPts,true), numSamples,6,8,true), railMat));
+}
+for(let i=0;i<numSamples;i+=15){
+const p = curve.getPointAt(i/numSamples);
+const idx=i;
+const tie = new THREE.Mesh(new THREE.BoxGeometry(80,6,15), tieMat);
+tie.position.copy(p);
+tie.setRotationFromMatrix(new THREE.Matrix4().makeBasis(frames.binormals[idx],frames.normals[idx],frames.tangents[idx]));
+tie.translateY(-5); trackGroup.add(tie);
+if(i%90===0){
+const pillar = new THREE.Mesh(new THREE.CylinderGeometry(10,20,p.y,6), railMat);
+pillar.position.set(p.x,p.y/2,p.z);
+trackGroup.add(pillar);
+}
+}
+}
+const train=[];
+let progress=0, vel=0, isRacing=false;
+function addCar(){
+const isFirstCar = train.length === 0;
+const car=new THREE.Mesh(
+new THREE.BoxGeometry(60,40,90),
+new THREE.MeshStandardMaterial({
+color:0x1e222a,
+emissive: isFirstCar ? 0x00ffff : 0x7dcfff,
+emissiveIntensity: isFirstCar ? 0.8 : 0.3,
+wireframe:true
+})
+);
+scene.add(car); train.push(car); updateTrainPosition();
+}
+function updateTrainPosition(){
+train.forEach((car,i)=>{
+const cp = Math.min(progress,0.20) - i*0.035 +1;
+const p = curve.getPointAt(cp%1);
+const idx = Math.floor((cp%1)*numSamples);
+car.position.copy(p);
+car.setRotationFromMatrix(new THREE.Matrix4().makeBasis(frames.binormals[idx],frames.normals[idx],frames.tangents[idx]));
+car.translateY(25);
+if (i === 0) {
+trainLight.position.copy(car.position);
+trainLight.position.y += 100;
+}
+});
+}
+// ==========================================
+// 場景 2: 小教學視窗內的雲霄飛車
+// ==========================================
+const demoContainer = document.getElementById("track-demo");
+const scene2 = new THREE.Scene();
+scene2.background = new THREE.Color(0x1e222a); // 套用新色系
+const renderer2 = new THREE.WebGLRenderer({antialias:true});
+const width = demoContainer.clientWidth || 400;
+const height = demoContainer.clientHeight || 300;
+renderer2.setSize(width, height);
+demoContainer.appendChild(renderer2.domElement);
+const camera2 = new THREE.PerspectiveCamera(60, width/height, 1, 20000);
+camera2.position.set(2000,1200,2000);
+const controls2 = new OrbitControls(camera2, renderer2.domElement);
+controls2.enableDamping = true;
+controls2.dampingFactor = 0.05;
+scene2.add(new THREE.AmbientLight(0xcdd6f4,0.2));
+const dirLight2 = new THREE.DirectionalLight(0xffffff,0.4);
+dirLight2.position.set(1000, 2000, 1000);
+scene2.add(dirLight2);
+let trackGroup2 = new THREE.Group();
+scene2.add(trackGroup2);
+function buildTracksDemo(angleDeg=45){
+while(trackGroup2.children.length>0) trackGroup2.remove(trackGroup2.children[0]);
+const rad = angleDeg*Math.PI/180;
+const pts=[];
+const launchHeight = 120 + (Math.tan(rad)*1500);
+for(let i=0;i<=100;i++){
+const t=i/100; const a=t*Math.PI*2;
+const x = Math.sin(a)*1800 + Math.sin(a*2)*250;
+const z = Math.cos(a)*1500;
+let y = (i<=20) ? THREE.MathUtils.lerp(120,launchHeight,i/20) : Math.max(140, launchHeight*0.45 + Math.sin(a*4)*350);
+pts.push(new THREE.Vector3(x,y,z));
+}
+const curve2 = new THREE.CatmullRomCurve3(pts,true,'centripetal');
+const frames2 = curve2.computeFrenetFrames(3000,true);
+
+const railMat = new THREE.MeshStandardMaterial({color:0x292e42, emissive:0x1a1d24, emissiveIntensity:0.2});
+const tieMat = new THREE.MeshStandardMaterial({color:0x292e42, emissive:0x3b4261, emissiveIntensity:0.4});
+for(let offset of [24,-24]){
+const rPts=[];
+for(let j=0;j<=3000;j++) rPts.push(curve2.getPointAt(j/3000).add(frames2.binormals[j].clone().multiplyScalar(offset)));
+trackGroup2.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rPts,true),3000,6,8,true), railMat));
+}
+for(let i=0;i<=3000;i+=30){
+const p = curve2.getPointAt(i/3000);
+const tie = new THREE.Mesh(new THREE.BoxGeometry(80,6,15), tieMat);
+tie.position.copy(p);
+tie.setRotationFromMatrix(new THREE.Matrix4().makeBasis(frames2.binormals[i],frames2.normals[i],frames2.tangents[i]));
+tie.translateY(-5); trackGroup2.add(tie);
+}
+trackGroup2.curve = curve2; trackGroup2.frames = frames2;
+}
+buildTracksDemo(37);
+const demoTrain = [];
+let demoProgress = 0;
+function addDemoCar(){
+const car = new THREE.Mesh(
+new THREE.BoxGeometry(100,60,150),
+new THREE.MeshStandardMaterial({color:0x1e222a, emissive:0xbb9af7, emissiveIntensity:0.6, wireframe:true})
+);
+scene2.add(car); demoTrain.push(car); updateDemoTrain();
+}
+function updateDemoTrain(){
+demoTrain.forEach((car,i)=>{
+const cp = (demoProgress - i*0.035 +1) %1;
+const idx = Math.floor(cp*3000);
+const p = trackGroup2.curve.getPointAt(cp);
+car.position.copy(p);
+car.setRotationFromMatrix(new THREE.Matrix4().makeBasis(trackGroup2.frames.binormals[idx], trackGroup2.frames.normals[idx], trackGroup2.frames.tangents[idx]));
+car.translateY(25);
+});
+}
+addDemoCar();
+// 綁定 Slider 事件
+document.getElementById("angleSlider").addEventListener("input",(e)=>{
+const angleDeg = parseFloat(e.target.value);
+buildTracksDemo(angleDeg);
+});
+// 主動畫 Loop
+function animate(){
+requestAnimationFrame(animate);
+ferris.rotation.z += 0.002;
+
+// 場景1 列車動畫
+if(isRacing){
+vel = 0.00045; progress += vel;
+if(progress>=0.20) progress = 0;
+updateTrainPosition();
+}
+controls.update();
+renderer.render(scene,cameraTPV);
+// 場景2 列車動畫
+if(demoTrain.length>0){
+demoProgress += 0.00045; updateDemoTrain();
+}
+controls2.update();
+renderer2.render(scene2,camera2);
+}
+document.getElementById('track-container').addEventListener('click', ()=>{
+if(train.length===0) addCar();
+isRacing=true;
+});
+buildTracks();
+addCar();
+isRacing = true;
+animate();
+// RWD Resize
+window.addEventListener('resize', () => {
+cameraTPV.aspect = container.clientWidth / container.clientHeight;
+cameraTPV.updateProjectionMatrix();
+renderer.setSize(container.clientWidth, container.clientHeight);
+camera2.aspect = demoContainer.clientWidth / demoContainer.clientHeight;
+camera2.updateProjectionMatrix();
+renderer2.setSize(demoContainer.clientWidth, demoContainer.clientHeight);
+});
+</script>
+<script>
+// ---------- 正弦定理 SVG 更新邏輯 ----------
+const slider = document.getElementById("angleSlider");
+const sinValue = document.getElementById("sinValue");
+const cosValue = document.getElementById("cosValue");
+const tanValue = document.getElementById("tanValue");
+const thetaValue = document.getElementById("thetaValue");
+const thetaText = document.getElementById("thetaText");
+const triangle = document.getElementById("triangleShape");
+const angleArc = document.getElementById("angleArc");
+function updateTriangle() {
+const angle = slider.value;
+const rad = angle * Math.PI / 180;
+const hyp = 200;
+const opp = Math.sin(rad) * hyp;
+const adj = Math.cos(rad) * hyp;
+const x0 = 60, y0 = 240;
+const x1 = x0 + adj, y1 = y0;
+const x2 = x0, y2 = y0 - opp;
+triangle.setAttribute("points", `${x0},${y0} ${x1},${y1} ${x2},${y2}`);
+// 弧線
+const r = 50;
+const arcStart = { x: x0 + r, y: y0 };
+const arcEnd = { x: x0 + r * Math.cos(rad), y: y0 - r * Math.sin(rad) };
+angleArc.setAttribute("d", `M${arcStart.x},${arcStart.y} A${r},${r} 0 0,1 ${arcEnd.x},${arcEnd.y}`);
+// θ文字
+thetaText.setAttribute("x", (arcStart.x + arcEnd.x)/2 - 10);
+thetaText.setAttribute("y", (arcStart.y + arcEnd.y)/2 + 10);
+thetaText.textContent = `θ=${angle}°`;
+sinValue.innerText = Math.sin(rad).toFixed(3);
+cosValue.innerText = Math.cos(rad).toFixed(3);
+tanValue.innerText = Math.tan(rad).toFixed(3);
+thetaValue.innerText = angle;
+// 外接圓
+const circle = document.getElementById("circumCircle");
+const centerPoint = document.getElementById("centerPoint");
+const radiusLine = document.getElementById("radiusLine");
+const radiusText = document.getElementById("radiusText");
+const showRadius = document.getElementById("toggleRadius").checked;
+const showCircle = document.getElementById("toggleCircle").checked;
+const A = {x:x0, y:y0}, B = {x:x1, y:y1}, C = {x:x2, y:y2};
+const D = 2*(A.x*(B.y-C.y) + B.x*(C.y-A.y) + C.x*(A.y-B.y));
+if (Math.abs(D) > 1e-6) {
+const Ux = ((A.x*A.x + A.y*A.y)*(B.y-C.y) + (B.x*B.x + B.y*B.y)*(C.y-A.y) + (C.x*C.x + C.y*C.y)*(A.y-B.y)) / D;
+const Uy = ((A.x*A.x + A.y*A.y)*(C.x-B.x) + (B.x*B.x + B.y*B.y)*(A.x-C.x) + (C.x*C.x + C.y*C.y)*(B.x-A.x)) / D;
+const R = Math.sqrt((Ux-A.x)**2 + (Uy-A.y)**2);
+circle.style.display = showCircle ? "block" : "none";
+centerPoint.style.display = showCircle ? "block" : "none";
+radiusLine.style.display = showRadius ? "block" : "none";
+radiusText.style.display = showRadius ? "block" : "none";
+circle.setAttribute("cx",Ux); circle.setAttribute("cy",Uy); circle.setAttribute("r",R);
+centerPoint.setAttribute("cx",Ux); centerPoint.setAttribute("cy",Uy);
+radiusLine.setAttribute("x1",Ux); radiusLine.setAttribute("y1",Uy);
+radiusLine.setAttribute("x2",A.x); radiusLine.setAttribute("y2",A.y);
+radiusText.setAttribute("x",(Ux+A.x)/2); radiusText.setAttribute("y",(Uy+A.y)/2);
+radiusText.textContent = "R=" + R.toFixed(1);
+} else {
+circle.setAttribute("r",0);
+}
+}
+slider.addEventListener("input", updateTriangle);
+document.getElementById("toggleRadius").addEventListener("change", updateTriangle);
+document.getElementById("toggleCircle").addEventListener("change", updateTriangle);
+updateTriangle();
+
+// ---------- 餘弦定理 Canvas 更新邏輯 ----------
+const aSlider = document.getElementById("aSlider");
+const bSlider = document.getElementById("bSlider");
+const cSlider = document.getElementById("cSlider");
+function updateCosine() {
+let a = Number(aSlider.value);
+let b = Number(bSlider.value);
+let Cdeg = Number(cSlider.value);
+let C = Cdeg * Math.PI / 180;
+let c = Math.sqrt(a * a + b * b - 2 * a * b * Math.cos(C));
+document.getElementById("aValue").innerText = a;
+document.getElementById("bValue").innerText = b;
+document.getElementById("cAngle").innerText = Cdeg;
+document.getElementById("resultC").innerText = c.toFixed(2);
+drawTriangleCos(a, b, c, C);
+}
+function drawTriangleCos(a, b, c, C) {
+let ctx = document.getElementById("cosCanvas").getContext("2d");
+ctx.clearRect(0, 0, 350, 350);
+// 動態縮放防止超出畫布
+let maxSide = Math.max(a, b, c);
+let scale = 140 / maxSide;
+let sa = a * scale, sb = b * scale, sc = c * scale;
+let A = {x: 100, y: 250};
+let B = {x: 100 + sa, y: 250};
+let Cx = A.x + sb * Math.cos(C);
+let Cy = A.y - sb * Math.sin(C);
+// 科技感柔和繪圖設定
+ctx.strokeStyle = "#7dcfff";
+ctx.lineWidth = 3;
+ctx.lineJoin = "round";
+ctx.shadowBlur = 8;
+ctx.shadowColor = "rgba(125,207,255,0.5)";
+// 畫三角形
+ctx.beginPath();
+ctx.moveTo(A.x, A.y);
+ctx.lineTo(B.x, B.y);
+ctx.lineTo(Cx, Cy);
+ctx.closePath();
+ctx.stroke();
+// 關閉陰影，畫文字
+ctx.shadowBlur = 0;
+ctx.font = "16px Share Tech Mono, monospace";
+ctx.fillStyle = "#bac2de";
+ctx.fillText("a", (B.x + Cx) / 2 + 10, (B.y + Cy) / 2);
+ctx.fillText("b", (A.x + Cx) / 2 - 20, (A.y + Cy) / 2 - 10);
+ctx.fillStyle = "#bb9af7";
+ctx.fillText("c (結果)", (A.x + B.x) / 2 - 30, A.y + 25);
+}
+aSlider.addEventListener("input", updateCosine);
+bSlider.addEventListener("input", updateCosine);
+cSlider.addEventListener("input", updateCosine);
+updateCosine();
+
+
+// ==========================================
+// 🧩 新增：自由拖曳遊戲的繪圖與互動 JavaScript 邏輯
+// ==========================================
+const gameCanvas = document.getElementById('gameGeoCanvas');
+const gCtx = gameCanvas.getContext('2d');
+
+// 定義沙盒三角形的三個可拖動頂點 (調整至適中大小與初始位置)
+let gamePoints = [
+    { x: 275, y: 90, label: 'A', color: '#f38ba8' },  // 柔和紅
+    { x: 130, y: 310, label: 'B', color: '#89b4fa' }, // 柔和藍
+    { x: 420, y: 310, label: 'C', color: '#a6e3a1' }  // 柔和綠
+];
+
+let gDraggedPoint = null;
+let gameMode = 'sine';
+
+// 綁定幾何遊戲滑鼠與觸控監聽
+gameCanvas.addEventListener('mousedown', gOnMouseDown);
+gameCanvas.addEventListener('mousemove', gOnMouseMove);
+gameCanvas.addEventListener('mouseup', gOnMouseUp);
+gameCanvas.addEventListener('touchstart', gOnTouchStart, { passive: false });
+gameCanvas.addEventListener('touchmove', gOnTouchMove, { passive: false });
+gameCanvas.addEventListener('touchend', gOnMouseUp);
+
+function gGetMousePos(e) {
+    const rect = gameCanvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+        x: (clientX - rect.left) * (gameCanvas.width / rect.width),
+        y: (clientY - rect.top) * (gameCanvas.height / rect.height)
+    };
+}
+
+function gOnMouseDown(e) {
+    const pos = gGetMousePos(e);
+    for (let p of gamePoints) {
+        let dist = Math.hypot(p.x - pos.x, p.y - pos.y);
+        if (dist < 22) { // 觸控判定半徑
+            gDraggedPoint = p;
+            break;
+        }
+    }
+}
+
+function gOnTouchStart(e) {
+    e.preventDefault();
+    gOnMouseDown(e);
+}
+
+function gOnMouseMove(e) {
+    if (!gDraggedPoint) return;
+    const pos = gGetMousePos(e);
+    // 限制在安全邊界內
+    gDraggedPoint.x = Math.max(30, Math.min(gameCanvas.width - 30, pos.x));
+    gDraggedPoint.y = Math.max(30, Math.min(gameCanvas.height - 30, pos.y));
+    updateGameGeometry();
+}
+
+function gOnTouchMove(e) {
+    e.preventDefault();
+    gOnMouseMove(e);
+}
+
+function gOnMouseUp() {
+    gDraggedPoint = null;
+}
+
+function switchGameTab(mode) {
+    gameMode = mode;
+    document.getElementById('gTabSine').classList.toggle('active', mode === 'sine');
+    document.getElementById('gTabCosine').classList.toggle('active', mode === 'cosine');
+    document.getElementById('gContentSine').style.display = mode === 'sine' ? 'block' : 'none';
+    document.getElementById('gContentCosine').style.display = mode === 'cosine' ? 'block' : 'none';
+    updateGameGeometry();
+}
+
+function updateGameGeometry() {
+    // 計算相對邊長 (除以 8 換算成較好讀的數值單位)
+    const c = Math.hypot(gamePoints[0].x - gamePoints[1].x, gamePoints[0].y - gamePoints[1].y) / 8; // AB 邊
+    const a = Math.hypot(gamePoints[1].x - gamePoints[2].x, gamePoints[1].y - gamePoints[2].y) / 8; // BC 邊
+    const b = Math.hypot(gamePoints[2].x - gamePoints[0].x, gamePoints[2].y - gamePoints[0].y) / 8; // CA 邊
+
+    // 餘弦反推各角度數值
+    const cosA = (b*b + c*c - a*a) / (2 * b * c);
+    const cosB = (a*a + c*c - b*b) / (2 * a * c);
+    const cosC = (a*a + b*b - c*c) / (2 * a * b);
+
+    const radA = Math.acos(Math.max(-1, Math.min(1, cosA)));
+    const radB = Math.acos(Math.max(-1, Math.min(1, cosB)));
+    const radC = Math.acos(Math.max(-1, Math.min(1, cosC)));
+
+    const degA = radA * 180 / Math.PI;
+    const degB = radB * 180 / Math.PI;
+    const degC = radC * 180 / Math.PI;
+
+    const sinA = Math.sin(radA);
+    const sinB = Math.sin(radB);
+    const sinC = Math.sin(radC);
+
+    const rA = sinA > 0 ? (a / sinA) : 0;
+    const rB = sinB > 0 ? (b / sinB) : 0;
+    const rC = sinC > 0 ? (c / sinC) : 0;
+    const d2R = (rA + rB + rC) / 3;
+
+    if (gameMode === 'sine') {
+        document.getElementById('g-val-a').innerText = a.toFixed(1);
+        document.getElementById('g-val-b').innerText = b.toFixed(1);
+        document.getElementById('g-val-c').innerText = c.toFixed(1);
+        document.getElementById('g-val-A').innerText = Math.round(degA) + '°';
+        document.getElementById('g-val-B').innerText = Math.round(degB) + '°';
+        document.getElementById('g-val-C').innerText = Math.round(degC) + '°';
+        document.getElementById('g-val-2r').innerText = d2R.toFixed(1);
+
+        document.getElementById('g-calc-s-a').innerText = rA.toFixed(1);
+        document.getElementById('g-calc-s-b').innerText = rB.toFixed(1);
+        document.getElementById('g-calc-s-c').innerText = rC.toFixed(1);
+    } else {
+        document.getElementById('g-cos-asq').innerText = (a*a).toFixed(1);
+        document.getElementById('g-cos-b2c2').innerText = (b*b + c*c).toFixed(1);
+        document.getElementById('g-cos-b').innerText = b.toFixed(1);
+        document.getElementById('g-cos-c').innerText = c.toFixed(1);
+        document.getElementById('g-cos-valA').innerText = cosA.toFixed(3);
+        document.getElementById('g-cos-degA').innerText = Math.round(degA) + '°';
+
+        const modTerm = 2 * b * c * cosA;
+        document.getElementById('g-calc-c-left').innerText = (a*a).toFixed(1);
+        document.getElementById('g-calc-c-base').innerText = (b*b + c*c).toFixed(1);
+        document.getElementById('g-calc-c-modify').innerText = modTerm.toFixed(1);
+
+        const expEl = document.getElementById('g-cos-explanation');
+        const approxA = Math.round(degA);
+        if (approxA === 90) {
+            expEl.innerText = "⚡ 完美的 90° 直角傳輸！cos A = 0，修正項歸零，系統自動退回標準畢氏定理協定！";
+        } else if (degA > 90) {
+            expEl.innerText = "🔺 當前為鈍角 ( > 90°)，cos A 為負。減去負數等於加上補償能量波，因此 a² 大於 b²+c²！";
+        } else {
+            expEl.innerText = "📐 當前為銳角 ( < 90°)，cos A 為正。演算法必須減去一塊空間修正值，故 a² 小於 b²+c²！";
+        }
+    }
+
+    drawGameCanvas();
+}
+
+function drawGameCanvas() {
+    gCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+
+    // 科技感背景小網格
+    gCtx.strokeStyle = 'rgba(59, 66, 97, 0.4)';
+    gCtx.lineWidth = 0.5;
+    for(let i=0; i<gameCanvas.width; i+=30) {
+        gCtx.beginPath(); gCtx.moveTo(i, 0); gCtx.lineTo(i, gameCanvas.height); gCtx.stroke();
+    }
+    for(let j=0; j<gameCanvas.height; j+=30) {
+        gCtx.beginPath(); gCtx.moveTo(0, j); gCtx.lineTo(gameCanvas.width, j); gCtx.stroke();
+    }
+
+    const [A, B, C] = gamePoints;
+
+    // 繪製三角形三側邊緣（顏色與對邊角編碼同步聯結）
+    // BC邊：對角A (粉紅)
+    gCtx.beginPath(); gCtx.moveTo(B.x, B.y); gCtx.lineTo(C.x, C.y);
+    gCtx.strokeStyle = '#f38ba8'; gCtx.lineWidth = 4; gCtx.stroke();
+
+    // CA邊：對角B (藍)
+    gCtx.beginPath(); gCtx.moveTo(C.x, C.y); gCtx.lineTo(A.x, A.y);
+    gCtx.strokeStyle = '#89b4fa'; gCtx.lineWidth = 3; gCtx.stroke();
+
+    // AB邊：對角C (綠)
+    gCtx.beginPath(); gCtx.moveTo(A.x, A.y); gCtx.lineTo(B.x, B.y);
+    gCtx.strokeStyle = '#a6e3a1'; gCtx.lineWidth = 3; gCtx.stroke();
+
+    // 特效：餘弦模式下強化關節 A 處的弧度視覺提示
+    if (gameMode === 'cosine') {
+        gCtx.beginPath();
+        gCtx.arc(A.x, A.y, 22, 0, 2 * Math.PI);
+        gCtx.strokeStyle = 'rgba(125, 207, 255, 0.4)';
+        gCtx.lineWidth = 2;
+        gCtx.stroke();
+    }
+
+    // 繪製三個互動頂點節點
+    gamePoints.forEach(p => {
+        gCtx.beginPath();
+        gCtx.arc(p.x, p.y, 12, 0, 2 * Math.PI);
+        gCtx.fillStyle = p.color;
+        gCtx.fill();
+        gCtx.lineWidth = 2;
+        gCtx.strokeStyle = '#ffffff';
+        gCtx.stroke();
+
+        // 節點識別碼字母
+        gCtx.fillStyle = '#1e222a';
+        gCtx.font = 'bold 15px sans-serif';
+        gCtx.textAlign = 'center';
+        gCtx.textBaseline = 'middle';
+        gCtx.fillText(p.label, p.x, p.y);
+    });
+}
+
+// 首次載入初始化幾何遊戲
+updateGameGeometry();
+</script>
+</body>
+</html>

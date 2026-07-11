@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>3D 虛擬數學</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: 'Share Tech Mono', 'Segoe UI', sans-serif;
+  background-color: #1e222a; 
+}
+
+/* 上層UI：加入中央暗化的輻射漸層 */
+#overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #cdd6f4;
+  pointer-events: none;
+  background: radial-gradient(circle at center, rgba(15, 17, 21, 0.7) 0%, rgba(30, 34, 42, 0) 60%);
+  transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* 科技感毛玻璃面板 */
+#panel {
+  pointer-events: auto;
+  background: rgba(30, 34, 42, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 60px 100px;
+  border-radius: 12px;
+  border: 1px solid rgba(137, 180, 250, 0.2);
+  border-top: 1px solid rgba(137, 180, 250, 0.5);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); 
+  
+  transform: scaleY(0);
+  transform-origin: top;
+  animation: openCloth 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes openCloth {
+  0% { transform: scaleY(0); opacity: 0; }
+  100% { transform: scaleY(1); opacity: 1; }
+}
+
+/* 文字 */
+#title {
+  font-size: 32px;
+  font-weight: bold;
+  letter-spacing: 4px;
+  margin-bottom: 50px;
+  color: #89b4fa; 
+  text-shadow: 0 0 10px rgba(137, 180, 250, 0.4); 
+  min-height: 40px; 
+
+  opacity: 0;
+  animation: fadeIn 1s ease forwards;
+  animation-delay: 1.2s;
+}
+
+.cursor {
+  display: inline-block;
+  width: 10px;
+  height: 30px;
+  background-color: #89b4fa;
+  vertical-align: text-bottom;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.menu {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+
+  opacity: 0;
+  animation: fadeIn 1s ease forwards;
+  animation-delay: 1.8s;
+}
+
+.btn {
+  padding: 15px 40px;
+  font-size: 18px;
+  font-family: 'Share Tech Mono', monospace;
+  border: 1px solid rgba(125, 207, 255, 0.3);
+  border-radius: 6px;
+  background: rgba(125, 207, 255, 0.02);
+  cursor: pointer;
+  color: #7dcfff; 
+  letter-spacing: 2px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:hover {
+  transform: translateY(-3px) scale(1.05);
+  background: rgba(125, 207, 255, 0.2);
+  border-color: #00ffff;
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(125, 207, 255, 0.6), inset 0 0 15px rgba(125, 207, 255, 0.4);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+canvas { display: block; }
+@keyframes fadeIn { to { opacity: 1; } }
+</style>
+</head>
+
+<body>
+
+<div id="overlay">
+  <div id="panel">
+    <h1 id="title"><span id="text-container"></span><span class="cursor"></span></h1>
+    <div class="menu">
+      <button class="btn" data-url="1-sct-homepage.html">三角函數</button>
+      <button class="btn" data-url="1-lf-homepage.html">線性函數</button>
+      <button class="btn" data-url="game-homepage.html">鐵道系統</button>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1e222a);
+scene.fog = new THREE.FogExp2(0x1e222a, 0.0002);
+
+const renderer = new THREE.WebGLRenderer({antialias: true});
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 20000);
+camera.position.set(2000, 2000, 3000);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+
+scene.add(new THREE.AmbientLight(0xcdd6f4, 0.15));
+const light = new THREE.DirectionalLight(0xffffff, 0.3);
+light.position.set(1000, 2000, 1000);
+scene.add(light);
+
+/* 地面與全息網格 */
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(20000, 20000),
+  new THREE.MeshStandardMaterial({color: 0x111318, roughness: 0.8}) 
+);
+ground.rotation.x = -Math.PI / 2;
+scene.add(ground);
+
+const gridHelper = new THREE.GridHelper(20000, 100, 0x3b4261, 0x1a1d24);
+gridHelper.position.y = 1; 
+scene.add(gridHelper);
+
+/* 摩天輪 */
+const ferris = new THREE.Group();
+ferris.add(
+  new THREE.Mesh(
+    new THREE.TorusGeometry(400, 8, 16, 100),
+    new THREE.MeshStandardMaterial({ color: 0x292e42, emissive: 0x3b4261, emissiveIntensity: 0.2 })
+  )
+);
+for (let i = 0; i < 12; i++) {
+  const pod = new THREE.Mesh(
+    new THREE.BoxGeometry(60, 80, 50),
+    new THREE.MeshStandardMaterial({
+      color: 0x292e42, emissive: 0xbb9af7, emissiveIntensity: 0.2, transparent: true, opacity: 0.8
+    })
+  );
+  pod.position.set(Math.cos(i / 12 * Math.PI * 2) * 400, Math.sin(i / 12 * Math.PI * 2) * 400, 0);
+  ferris.add(pod);
+}
+ferris.position.set(-2000, 600, -1500);
+scene.add(ferris);
+
+/* 軌道 */
+let curve, frames;
+const trackGroup = new THREE.Group();
+scene.add(trackGroup);
+const numSamples = 2000;
+
+function buildTracks() {
+  const pts = [];
+  for (let i = 0; i <= 100; i++) {
+    const t = i / 100;
+    const a = t * Math.PI * 2;
+    const x = Math.sin(a) * 1800;
+    const z = Math.cos(a) * 1500;
+    const y = 200 + Math.sin(a * 4) * 300;
+    pts.push(new THREE.Vector3(x, y, z));
+  }
+  curve = new THREE.CatmullRomCurve3(pts, true);
+  frames = curve.computeFrenetFrames(numSamples, true);
+
+  const railMat = new THREE.MeshStandardMaterial({
+    color: 0x292e42, roughness: 0.4, metalness: 0.8, emissive: 0x1a1d24, emissiveIntensity: 0.1 
+  });
+  for (let offset of [24, -24]) {
+    const rPts = [];
+    for (let j = 0; j <= numSamples; j++) {
+      rPts.push(curve.getPointAt(j / numSamples).add(frames.binormals[j].clone().multiplyScalar(offset)));
+    }
+    trackGroup.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rPts, true), numSamples, 6, 8, true), railMat));
+  }
+}
+trackGroup.scale.set(2, 2, 2);
+
+/* 雲霄飛車設定 */
+const train = [];
+let progress = 0;
+let trainSpeed = 0x3b4261 === 0 ? 0 : 0.0008; // 稍微放慢初始速度，讓畫面更沉穩
+
+// 轉場控制狀態
+let transitionState = 0; // 0: 無轉場, 1: 鏡頭平滑飛向車尾準備, 2: 完美鎖定第一人稱前行
+let transitionProgress = 0; 
+const targetLookAt = new THREE.Vector3();
+
+const trainLight = new THREE.PointLight(0x7dcfff, 300000, 1500);
+scene.add(trainLight);
+
+function addCar(isFirstCar) {
+  const car = new THREE.Mesh(
+    new THREE.BoxGeometry(120, 80, 180),
+    new THREE.MeshStandardMaterial({
+      color: 0x1e222a, emissive: isFirstCar ? 0x00ffff : 0x7dcfff, emissiveIntensity: isFirstCar ? 0.8 : 0.3, wireframe: true 
+    })
+  );
+  scene.add(car);
+  train.push(car);
+}
+
+function updateTrain() {
+  train.forEach((car, i) => {
+    const cp = (progress - i * 0.03 + 1) % 1;
+    const p = curve.getPointAt(cp).clone().multiply(trackGroup.scale);
+    const idx = Math.floor(cp * numSamples);
+
+    car.position.copy(p);
+    car.setRotationFromMatrix(
+      new THREE.Matrix4().makeBasis(frames.binormals[idx], frames.normals[idx], frames.tangents[idx])
+    );
+    car.translateY(50);
+
+    // 處理車頭與相機綁定
+    if (i === 0) {
+      trainLight.position.copy(car.position).y += 100; 
+
+      if (transitionState > 0) {
+        // 算出車頭的未來前進預測點，作為 lookAt 視角中心
+        const nextCp = (progress + 0.02) % 1;
+        const lookTarget = curve.getPointAt(nextCp).clone().multiply(trackGroup.scale).add(new THREE.Vector3(0, 60, 0));
+        
+        // 動態計算車廂後上方的理想跟隨點
+        const backOffset = frames.tangents[idx].clone().multiplyScalar(-250); // 後移
+        const upOffset = frames.normals[idx].clone().multiplyScalar(120);     // 上移
+        const idealCamPos = car.position.clone().add(backOffset).add(upOffset);
+
+        if (transitionState === 1) {
+          // 【第一階段】相機從任意位置「絲滑緩入」到理想跟隨位置 (插值係數 0.04)
+          camera.position.lerp(idealCamPos, 0.04);
+          targetLookAt.lerp(lookTarget, 0.04);
+          camera.lookAt(targetLookAt);
+
+          // 當距離非常接近時，天衣無縫切換到完全綁定
+          if (camera.position.distanceTo(idealCamPos) < 15) {
+            transitionState = 2;
+          }
+        } 
+        else if (transitionState === 2) {
+          // 【第二階段】完全絲滑鎖定，跟著軌道起伏擺動前進
+          camera.position.lerp(idealCamPos, 0.2); 
+          camera.lookAt(lookTarget);
+        }
+      }
+    }
+  });
+}
+
+window.addEventListener('resize', onWindowResize, false);
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  progress += trainSpeed;
+  ferris.rotation.z += 0.002; 
+  updateTrain();
+  
+  if (transitionState === 0) {
+    controls.update(); 
+  } else if (transitionState === 1) {
+    // 轉場過渡時，手動平滑更新 OrbitControls 的 target 避免畫面抽動
+    controls.target.copy(targetLookAt);
+  }
+  
+  renderer.render(scene, camera);
+}
+
+buildTracks();
+addCar(true); 
+for (let i = 0; i < 4; i++) addCar(false);
+animate();
+
+/* 打字機效果 */
+const text = "\"歡迎登入3D虛擬數學...\"";
+const textContainer = document.getElementById("text-container");
+let i = 0;
+function typeWriter() {
+  if (i < text.length) {
+    textContainer.innerHTML += text.charAt(i);
+    i++;
+    setTimeout(typeWriter, Math.random() * 40 + 60);
+  }
+}
+setTimeout(typeWriter, 1200);
+
+/* =========================================
+   絲滑連貫的雲霄飛車串接轉場
+========================================= */
+document.querySelectorAll('.menu .btn').forEach(button => {
+  button.addEventListener('click', function() {
+    if (transitionState > 0) return; 
+    
+    // 1. 初始化轉場視角基準點（防止相機瞬間轉向扭到）
+    targetLookAt.copy(controls.target);
+    transitionState = 1; 
+    controls.enabled = false; 
+    
+    // 2. UI 優雅柔和淡出
+    const overlay = document.getElementById('overlay');
+    overlay.style.opacity = '0';
+    overlay.style.transform = 'scale(1.05)'; // 輕微放大的推入感
+    overlay.style.pointerEvents = 'none';
+    
+    // 3. 連貫流暢的微調速（不突然飆速，保持優雅）
+    let speedTween = setInterval(() => {
+      if(trainSpeed < 0.0025) { 
+        trainSpeed += 0.0001; 
+      }
+    }, 50);
+    
+    const targetUrl = this.getAttribute('data-url');
+    
+    // 4. 給予足夠的運鏡時間（2.8秒），確保滑行過程連貫看完才跳轉
+    setTimeout(() => {
+      clearInterval(speedTween);
+      window.location.href = targetUrl;
+    }, 2800);
+  });
+});
+</script>
+</body>
+</html>

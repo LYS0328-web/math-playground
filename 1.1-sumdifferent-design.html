@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>虛擬數學中樞 - 和差角運算模組</title>
+
+<style>
+/* 引入科技感字體 */
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap');
+
+body {
+  margin: 0;
+  font-family: 'Share Tech Mono', 'Segoe UI', sans-serif;
+  background: #1e222a; /* 護眼深藍灰背景 */
+  color: #bac2de;      /* 柔和文字色 */
+  display: flex;
+  padding-top: 60px;
+  overflow-x: hidden;
+}
+
+/* ===== 導覽列 - 柔和毛玻璃風格 ===== */
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 60px;
+  background: rgba(30, 34, 42, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(137, 180, 250, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  padding-left: 20px;
+  z-index: 9999;
+}
+
+.logo {
+  color: #89b4fa;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 22px;
+  font-weight: bold;
+  text-shadow: 0 0 8px rgba(137, 180, 250, 0.4);
+  letter-spacing: 2px;
+}
+
+.navbar a {
+  color: #89b4fa;
+  margin-left: 30px;
+  text-decoration: none;
+  text-transform: uppercase;
+  text-shadow: 0 0 5px rgba(137, 180, 250, 0.3);
+  transition: 0.3s;
+}
+.navbar a:hover {
+  text-shadow: 0 0 8px rgba(205, 214, 244, 0.6);
+  background: rgba(137, 180, 250, 0.1);
+  color: #cdd6f4;
+}
+
+/* 下拉選單 */
+.dropdown {
+  position: relative;
+  display: inline-block;
+  margin-left: 20px;
+}
+
+.dropbtn {
+  background: none;
+  border: none;
+  color: #89b4fa;
+  cursor: pointer;
+  font-size: 16px;
+  font-family: 'Share Tech Mono', monospace;
+  text-shadow: 0 0 5px rgba(137, 180, 250, 0.3);
+  transition: 0.3s;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: rgba(20, 23, 30, 0.95);
+  min-width: 180px;
+  border: 1px solid rgba(137, 180, 250, 0.2);
+  border-top: none;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+  z-index: 10000;
+}
+
+.dropdown:hover .dropdown-content { display: block; }
+.dropdown:hover .dropbtn { background: rgba(137, 180, 250, 0.1); color: #cdd6f4; }
+
+.dropdown-content a {
+  display: block;
+  padding: 12px 20px;
+  color: #7dcfff;
+  text-shadow: none;
+  margin-left: 0;
+}
+.dropdown-content a:hover {
+  background: rgba(125, 207, 255, 0.15);
+  color: #ffffff;
+}
+
+/* ===== 左側終端機選單 ===== */
+.sidebar {
+  width: 220px;
+  background: rgba(125, 207, 255, 0.03);
+  border-right: 1px solid rgba(137, 180, 250, 0.2);
+  padding: 15px;
+  height: calc(100vh - 60px);
+  box-shadow: inset -5px 0 15px rgba(0,0,0,0.1);
+}
+
+.sidebar div {
+  padding: 12px;
+  margin: 8px 0;
+  background: rgba(20, 23, 30, 0.6);
+  border: 1px solid rgba(137, 180, 250, 0.2);
+  border-left: 3px solid #89b4fa;
+  color: #89b4fa;
+  cursor: pointer;
+  transition: 0.3s;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+.sidebar div:hover {
+  background: rgba(137, 180, 250, 0.1);
+  box-shadow: 0 0 10px rgba(137, 180, 250, 0.3);
+  text-shadow: 0 0 5px #89b4fa;
+}
+
+/* ===== 中間投影區 ===== */
+#center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 30px;
+}
+
+.canvasWrap {
+  position: relative;
+  width: 520px;
+  background: rgba(125, 207, 255, 0.03);
+  border: 1px solid rgba(137, 180, 250, 0.2);
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+}
+
+canvas {
+  background: transparent;
+  display: block;
+  margin: 0 auto;
+}
+
+/* ===== 參數輸入區 ===== */
+.inputBox {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #89b4fa;
+}
+
+input {
+  width: 60px;
+  padding: 8px;
+  margin: 0 10px;
+  background: #1e222a;
+  border: 1px solid #bb9af7;
+  color: #bb9af7;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 16px;
+  text-align: center;
+  box-shadow: 0 0 5px rgba(187, 154, 247, 0.2);
+  outline: none;
+  border-radius: 4px;
+}
+input:focus {
+  box-shadow: 0 0 8px rgba(187, 154, 247, 0.6);
+}
+
+button {
+  padding: 8px 16px;
+  background: transparent;
+  color: #a6e3a1;
+  border: 1px solid #a6e3a1;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 0 5px rgba(166, 227, 161, 0.2);
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+button:hover {
+  background: rgba(166, 227, 161, 0.15);
+  box-shadow: 0 0 10px rgba(166, 227, 161, 0.5);
+}
+
+/* ===== 右側數據面板 ===== */
+#rightPanel {
+  width: 340px;
+  background: rgba(125, 207, 255, 0.03);
+  padding: 20px;
+  border-left: 1px solid rgba(137, 180, 250, 0.2);
+  height: calc(100vh - 60px);
+  overflow-y: auto;
+}
+
+.box {
+  background: rgba(20, 23, 30, 0.8);
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(137, 180, 250, 0.2);
+  border-radius: 5px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.box > div:first-child {
+  color: #a6adc8;
+  font-size: 12px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#formulaTitle {
+  font-family: 'Orbitron', sans-serif;
+  color: #bb9af7;
+  font-size: 20px;
+  text-shadow: 0 0 5px rgba(187, 154, 247, 0.4);
+  margin-bottom: 5px;
+}
+
+#formulaUse {
+  color: #bac2de;
+  font-size: 16px;
+}
+
+#calc {
+  line-height: 1.6;
+  color: #89b4fa;
+}
+
+.result {
+  font-size: 24px;
+  font-weight: bold;
+  color: #a6e3a1;
+  text-shadow: 0 0 8px rgba(166, 227, 161, 0.5);
+  font-family: 'Orbitron', sans-serif;
+}
+
+/* ===== 系統狀態字幕 ===== */
+#subtitleBox {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 23, 30, 0.9);
+  border: 1px solid #bb9af7;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  padding: 12px 30px;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 18px;
+  color: #bb9af7;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 2px;
+  z-index: 1000;
+}
+
+/* 自定義滾動條 */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #1e222a; }
+::-webkit-scrollbar-thumb { background: #3b4261; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #7dcfff; }
+
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+  <div class="logo">SYS_CORE</div>
+  <a href="index.html">[ 系統首頁 ]</a>
+
+  <div class="dropdown">
+    <button class="dropbtn">數學資料庫 ▼</button>
+    <div class="dropdown-content">
+      <a href="1-lf-homepage.html">> 三角函數</a>
+      <a href="1-sct-homepage.html">> 線性函數</a>
+      <a href="game-homepage.html">> 鐵道模擬系統</a>
+    </div>
+  </div>
+</div>
+
+<div class="sidebar">
+  <div onclick="setMode('sinAdd')">▶ 載入 sin(A+B)</div>
+  <div onclick="setMode('sinSub')">▶ 載入 sin(A−B)</div>
+  <div onclick="setMode('cosAdd')">▶ 載入 cos(A+B)</div>
+  <div onclick="setMode('cosSub')">▶ 載入 cos(A−B)</div>
+</div>
+
+<div id="center">
+  <div class="inputBox">
+    參數 A：<input id="inputA" value="60">
+    參數 B：<input id="inputB" value="40">
+    <button onclick="start()">啟動運算序列</button>
+  </div>
+
+  <div class="canvasWrap">
+    <canvas id="canvas" width="520" height="520"></canvas>
+  </div>
+</div>
+
+<div id="rightPanel">
+  <div class="box">
+    <div>執行中協議 (Current Protocol)</div>
+    <div id="formulaTitle">sin(A+B)</div>
+    <div id="formulaUse">sinAcosB + cosAsinB</div>
+  </div>
+
+  <div class="box">
+    <div>解析進度 (Computation Log)</div>
+    <div id="calc">等待指令輸入...</div>
+  </div>
+
+  <div class="box">
+    <div>輸出結果 (Output)</div>
+    <div id="result" class="result">0.0000</div>
+  </div>
+</div>
+
+<div id="subtitleBox">
+  <div id="subtitle">SYSTEM STANDBY_ 待命狀態</div>
+</div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+let theta = 0, phi = 0;
+let targetTheta = 60, targetPhi = 40;
+let mode = "sinAdd";
+let stage = 0;
+
+/* ===== 公式切換 ===== */
+const map = {
+  sinAdd: ["sin(A+B)", "sinAcosB + cosAsinB"],
+  sinSub: ["sin(A−B)", "sinAcosB − cosAsinB"],
+  cosAdd: ["cos(A+B)", "cosAcosB − sinAsinB"],
+  cosSub: ["cos(A−B)", "cosAcosB + sinAsinB"]
+};
+
+function setMode(m){
+  mode = m;
+  document.getElementById("formulaTitle").innerText = map[m][0];
+  document.getElementById("formulaUse").innerText = map[m][1];
+  subtitle(`切換協議: ${map[m][0]}`);
+}
+
+/* ===== 畫圖 (護眼科幻螢光風格) ===== */
+function draw(){
+  // 清空畫布
+  ctx.clearRect(0, 0, 520, 520);
+  ctx.shadowBlur = 0; // 重置發光
+
+  const cx = 260, cy = 260, r = 170;
+
+  // 繪製背景雷達圈
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.strokeStyle = "rgba(137, 180, 250, 0.2)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  
+  // 十字雷達線
+  ctx.beginPath();
+  ctx.moveTo(cx - r - 20, cy); ctx.lineTo(cx + r + 20, cy);
+  ctx.moveTo(cx, cy - r - 20); ctx.lineTo(cx, cy + r + 20);
+  ctx.strokeStyle = "rgba(137, 180, 250, 0.15)";
+  ctx.stroke();
+
+  // 繪製雷達掃描扇區 (柔和發光)
+  if(stage >= 1) drawLine(theta, "#bb9af7"); // Lavender for A
+  if(stage >= 2) drawLine(phi, "#89b4fa");   // Sky Blue for B
+  if(stage >= 3){
+    let ang = mode.includes("Sub") ? theta - phi : theta + phi;
+    drawLine(ang, "#a6e3a1");                // Morandi Green for Result
+  }
+}
+
+function drawLine(angle, color){
+  const cx = 260, cy = 260, r = 170;
+  const rad = angle * Math.PI / 180;
+
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + r * Math.cos(rad), cy - r * Math.sin(rad));
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3;
+  
+  // 霓虹發光效果 (調低發光強度以達到護眼效果)
+  ctx.shadowBlur = 10;
+  ctx.shadowColor = color;
+  ctx.stroke();
+  
+  // 繪製頂點高亮點
+  ctx.beginPath();
+  ctx.arc(cx + r * Math.cos(rad), cy - r * Math.sin(rad), 4, 0, Math.PI*2);
+  ctx.fillStyle = "#fff";
+  ctx.fill();
+  
+  ctx.shadowBlur = 0; // 畫完後重置
+}
+
+/* ===== 字幕 ===== */
+function subtitle(t){
+  document.getElementById("subtitle").innerText = t;
+}
+
+/* ===== 計算 ===== */
+function compute(){
+  let A = targetTheta * Math.PI / 180;
+  let B = targetPhi * Math.PI / 180;
+
+  let sinA = Math.sin(A);
+  let cosA = Math.cos(A);
+  let sinB = Math.sin(B);
+  let cosB = Math.cos(B);
+
+  let ans = 0;
+  let html = "";
+
+  if(mode === "sinAdd"){
+    ans = sinA*cosB + cosA*sinB;
+    html = `
+    > 解析參數 A...<br>
+    sinA = ${sinA.toFixed(4)}<br>
+    cosB = ${cosB.toFixed(4)}<br>
+    sinA×cosB = ${(sinA*cosB).toFixed(4)}<br><br>
+    > 解析參數 B...<br>
+    cosA = ${cosA.toFixed(4)}<br>
+    sinB = ${sinB.toFixed(4)}<br>
+    cosA×sinB = ${(cosA*sinB).toFixed(4)}<br>
+    `;
+  }
+  else if(mode === "sinSub"){
+    ans = sinA*cosB - cosA*sinB;
+    html = `
+    > 解析參數 A...<br>
+    sinA = ${sinA.toFixed(4)}<br>
+    cosB = ${cosB.toFixed(4)}<br>
+    sinA×cosB = ${(sinA*cosB).toFixed(4)}<br><br>
+    > 解析參數 B...<br>
+    cosA = ${cosA.toFixed(4)}<br>
+    sinB = ${sinB.toFixed(4)}<br>
+    cosA×sinB = ${(cosA*sinB).toFixed(4)}<br>
+    `;
+  }
+  else if(mode === "cosAdd"){
+    ans = cosA*cosB - sinA*sinB;
+    html = `
+    > 解析參數 A...<br>
+    cosA = ${cosA.toFixed(4)}<br>
+    cosB = ${cosB.toFixed(4)}<br>
+    cosA×cosB = ${(cosA*cosB).toFixed(4)}<br><br>
+    > 解析參數 B...<br>
+    sinA = ${sinA.toFixed(4)}<br>
+    sinB = ${sinB.toFixed(4)}<br>
+    sinA×sinB = ${(sinA*sinB).toFixed(4)}<br>
+    `;
+  }
+  else if(mode === "cosSub"){
+    ans = cosA*cosB + sinA*sinB;
+    html = `
+    > 解析參數 A...<br>
+    cosA = ${cosA.toFixed(4)}<br>
+    cosB = ${cosB.toFixed(4)}<br>
+    cosA×cosB = ${(cosA*cosB).toFixed(4)}<br><br>
+    > 解析參數 B...<br>
+    sinA = ${sinA.toFixed(4)}<br>
+    sinB = ${sinB.toFixed(4)}<br>
+    sinA×sinB = ${(sinA*sinB).toFixed(4)}<br>
+    `;
+  }
+
+  document.getElementById("calc").innerHTML = html;
+  document.getElementById("result").innerText = "≈ " + ans.toFixed(4);
+}
+
+/* ===== 主流程（動畫分鏡） ===== */
+async function start(){
+  targetTheta = parseFloat(document.getElementById("inputA").value);
+  targetPhi = parseFloat(document.getElementById("inputB").value);
+
+  if(isNaN(targetTheta) || isNaN(targetPhi)) {
+    subtitle("錯誤：非法的參數輸入！");
+    return;
+  }
+
+  theta = 0;
+  phi = 0;
+  stage = 0;
+
+  document.getElementById("calc").innerHTML = "正在重置環境變數...";
+  document.getElementById("result").innerText = "0.0000";
+
+  subtitle("建構向量 A (Vector A)...");
+  stage = 1;
+  await animate("theta", targetTheta);
+
+  subtitle("建構向量 B (Vector B)...");
+  stage = 2;
+  await animate("phi", targetPhi);
+
+  subtitle("執行運算協議...");
+  stage = 3;
+  draw();
+
+  compute();
+
+  subtitle("運算完成 _TASK_COMPLETED");
+}
+
+/* ===== 動畫循環 ===== */
+function animate(type, target){
+  return new Promise(res => {
+    // 判斷正負角度增量
+    const step = target > 0 ? 1 : -1;
+    let current = 0;
+    
+    const i = setInterval(() => {
+      if(type === "theta") theta += step;
+      if(type === "phi") phi += step;
+      current += step;
+
+      draw();
+
+      if (Math.abs(current) >= Math.abs(target)) {
+        // 修正最後的精準角度
+        if(type === "theta") theta = target;
+        if(type === "phi") phi = target;
+        draw();
+        clearInterval(i);
+        res();
+      }
+    }, 15);
+  });
+}
+
+// 初始設定
+draw();
+setMode("sinAdd");
+
+</script>
+
+</body>
+</html>

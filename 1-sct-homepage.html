@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D 虛擬數學 - 三角函數</title>
+<style>
+/* 引入科技感字體 */
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+body { 
+  margin: 0; 
+  font-family: 'Share Tech Mono', 'Segoe UI', sans-serif; 
+  background: #1e222a; /* 護眼深藍灰背景 */
+  overflow: hidden; 
+}
+
+/* 上方導覽列 - 柔和毛玻璃風格 */
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: rgba(30, 34, 42, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(137, 180, 250, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  height: 50px;
+  line-height: 50px;
+  transition: opacity 0.5s ease; /* 加入淡出動畫 */
+}
+.navbar a { 
+  float: left; 
+  color: #89b4fa; /* 柔和天際藍 */
+  padding: 0 20px; 
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 5px rgba(137, 180, 250, 0.3);
+  transition: 0.3s;
+}
+.navbar a:hover { 
+  background: rgba(137, 180, 250, 0.1); 
+  color: #cdd6f4;
+  text-shadow: 0 0 8px rgba(205, 214, 244, 0.6);
+}
+.dropdown { float: left; }
+.dropbtn { 
+  background: none; 
+  border: none; 
+  color: #89b4fa; 
+  padding: 0 20px; 
+  cursor: pointer; 
+  font-size: 16px; 
+  line-height: 50px;
+  font-family: 'Share Tech Mono', monospace;
+  text-shadow: 0 0 5px rgba(137, 180, 250, 0.3);
+  transition: 0.3s;
+}
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background: rgba(20, 23, 30, 0.95);
+  border: 1px solid rgba(137, 180, 250, 0.2);
+  border-top: none;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  min-width: 160px;
+  backdrop-filter: blur(12px);
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+}
+.dropdown-content a { 
+  display: block; 
+  padding: 12px 20px; 
+  color: #7dcfff;
+  text-shadow: none;
+}
+.dropdown-content a:hover { 
+  background: rgba(125, 207, 255, 0.15); 
+  color: #ffffff;
+}
+.dropdown:hover .dropdown-content { display: block; }
+.dropdown:hover .dropbtn { background: rgba(137, 180, 250, 0.1); color: #cdd6f4;}
+
+/* 右半部文字區 - 護眼聚焦面板 */
+#right-panel {
+  position: absolute;
+  top: 50px; 
+  bottom: 0; 
+  right: 0; 
+  width: 35%; 
+  padding: 30px; 
+  color: #a6adc8; /* 降低內文亮度，提高舒適度 */
+  overflow-y: auto;
+  background: rgba(20, 23, 30, 0.75); /* 深色底 */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-left: 1px solid rgba(137, 180, 250, 0.2);
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.4);
+  transition: opacity 0.5s ease; /* 加入淡出動畫 */
+  z-index: 10;
+}
+
+/* 任務卡片化設計 (Quest Card) - 柔和版 */
+.quest-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: rgba(125, 207, 255, 0.03);
+  border: 1px solid rgba(125, 207, 255, 0.15);
+  padding: 20px 25px;
+  margin-bottom: 25px;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 卡片左側的裝飾條 */
+.quest-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  background: #7dcfff;
+  box-shadow: 0 0 8px rgba(125, 207, 255, 0.5);
+  transition: 0.3s;
+}
+
+.quest-card:hover {
+  background: rgba(125, 207, 255, 0.08);
+  border-color: rgba(125, 207, 255, 0.4);
+  transform: translateX(6px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.quest-card:hover::before {
+  background: #bb9af7; /* 懸停時轉為薰衣草紫 */
+  box-shadow: 0 0 12px rgba(187, 154, 247, 0.6);
+}
+
+.quest-card h1 { 
+  margin: 0 0 12px 0; 
+  color: #89b4fa;
+  text-shadow: 0 0 8px rgba(137, 180, 250, 0.3);
+  font-size: 22px;
+  letter-spacing: 1px;
+  transition: 0.3s;
+}
+
+.quest-card:hover h1 {
+  color: #cdd6f4;
+  text-shadow: 0 0 10px rgba(205, 214, 244, 0.5);
+}
+
+.quest-card p {
+  margin: 0;
+  line-height: 1.7;
+  font-family: 'Segoe UI', sans-serif; 
+  font-size: 15px;
+  color: #bac2de;
+}
+
+/* =========================================
+   浮動 NPC 角色系統 (右下角)
+========================================= */
+#npc-system {
+  position: fixed;
+  bottom: 40px;
+  right: 40px; 
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: none; 
+}
+
+.speech-bubble {
+  background: rgba(30, 34, 42, 0.95);
+  border: 1px solid #7dcfff;
+  border-radius: 16px 16px 0 16px;
+  padding: 15px 20px;
+  color: #cdd6f4;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  max-width: 250px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4), 0 0 15px rgba(125, 207, 255, 0.2);
+  margin-bottom: 20px;
+  opacity: 0;
+  transform: translateY(10px) scale(0.9);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  position: relative;
+}
+
+.speech-bubble::after {
+  content: ''; position: absolute; bottom: -10px; right: 15px;
+  border-width: 10px 10px 0 0; border-style: solid;
+  border-color: rgba(30, 34, 42, 0.95) transparent transparent transparent;
+}
+.speech-bubble::before {
+  content: ''; position: absolute; bottom: -11px; right: 14px;
+  border-width: 11px 11px 0 0; border-style: solid;
+  border-color: #7dcfff transparent transparent transparent; z-index: -1;
+}
+
+.speech-bubble.active { opacity: 1; transform: translateY(0) scale(1); }
+
+.npc-avatar {
+  width: 65px; height: 65px;
+  background: linear-gradient(135deg, #89b4fa, #bb9af7);
+  border-radius: 50%;
+  box-shadow: 0 0 25px rgba(187, 154, 247, 0.6);
+  position: relative;
+  animation: float 3s ease-in-out infinite;
+}
+
+.npc-avatar::before, .npc-avatar::after {
+  content: ''; position: absolute; top: 25px; width: 10px; height: 16px;
+  background: #1e222a; border-radius: 8px; animation: blink 4s infinite;
+}
+.npc-avatar::before { left: 16px; }
+.npc-avatar::after { right: 16px; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes blink {
+  0%, 46%, 48%, 100% { transform: scaleY(1); }
+  47% { transform: scaleY(0.1); }
+}
+
+#bubble-cursor {
+  display: inline-block; width: 6px; height: 15px;
+  background-color: #7dcfff; vertical-align: middle; margin-left: 4px;
+  animation: cursorBlink 1s step-end infinite;
+}
+@keyframes cursorBlink { 50% { opacity: 0; } }
+
+/* 科技感滾動條 */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #3b4261; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #7dcfff; }
+
+/* 3D 雲霄飛車畫布 */
+canvas { display: block; }
+
+/* 手機版響應式設計 */
+@media (max-width: 800px) {
+  #right-panel {
+    width: 100%; height: 50%; top: auto; bottom: 0; border-left: none;
+    border-top: 1px solid rgba(137, 180, 250, 0.3); padding: 20px; box-sizing: border-box;
+  }
+  #npc-system { right: 20px; bottom: 20px; z-index: 2000; }
+}
+</style>
+</head>
+<body>
+
+<div class="navbar" id="navbar">
+  <a href="#" onclick="location.href='index.html'"> 首頁 </a>
+  <div class="dropdown">
+    <button class="dropbtn">數學資料庫 ▼</button>
+    <div class="dropdown-content">
+      <a href="#" onclick="location.href='1-sct-homepage.html'">> 三角函數</a>
+      <a href="#" onclick="location.href='1-lf-homepage.html'">> 線性函數</a>
+      <a href="#" onclick="location.href='game-homepage.html'">> 鐵道系統</a>
+    </div>
+  </div>
+</div>
+
+<div id="right-panel">
+  <div style="margin-top: 20px;"></div>
+
+  <a href="1.1-sincostan-design.html" class="quest-card" id="trig">
+    <h1>01_ 三角函數 Trigonometric</h1>
+    <p>三角函數的起源地主要在古希臘、古印度和阿拉伯地區，在這裡你可以學習 sin、cos、tan 的定義與應用，破解幾何矩陣的基礎密碼。</p>
+  </a>
+
+  <a href="1.1-law-design.html" class="quest-card" id="sinecos">
+    <h1>02_ 正餘弦定理 Law of Sines</h1>
+    <p>有了基本sin、cos、tan的概念後，進階了解搭配實際生活的運用以及三角形與圓的關係，計算空間座標的絕對位置。</p>
+  </a>
+
+  <a href="1.1-sumdifferent-design.html" class="quest-card" id="sumdiff">
+    <h1>03_ 和差角 Sum and Diff</h1>
+    <p>當三角形改變角度，要如何精準計算偏移量？啟動演算法進行空間校準。</p>
+  </a>
+</div>
+
+<div id="npc-system">
+  <div class="speech-bubble" id="speech-bubble">
+    <span id="bubble-text"></span><span id="bubble-cursor"></span>
+  </div>
+  <div class="npc-avatar"></div>
+</div>
+
+<script type="importmap"> 
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } } 
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// 場景與渲染器 (護眼深藍灰)
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1e222a);
+scene.fog = new THREE.FogExp2(0x1e222a, 0.0002);
+
+const renderer = new THREE.WebGLRenderer({ antialias:true, logarithmicDepthBuffer:true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+// 相機
+const cameraTPV = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 20000);
+cameraTPV.position.set(1400,1800,2500);
+const controls = new OrbitControls(cameraTPV, renderer.domElement);
+controls.maxPolarAngle = Math.PI / 2 - 0.05; 
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+
+// 光源調暗，營造深邃感
+scene.add(new THREE.AmbientLight(0xcdd6f4, 0.15));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.3);
+dirLight.position.set(1000, 2000, 1000);
+scene.add(dirLight);
+
+// 列車動態光源
+const trainLight = new THREE.PointLight(0x7dcfff, 300000, 1500);
+scene.add(trainLight);
+
+// 地面與全息網格 (莫蘭迪色調)
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(20000,20000), 
+  new THREE.MeshStandardMaterial({color:0x111318, roughness: 0.8})
+);
+ground.rotation.x = -Math.PI/2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+const gridHelper = new THREE.GridHelper(20000, 100, 0x3b4261, 0x1a1d24);
+gridHelper.position.y = 1;
+scene.add(gridHelper);
+
+// 摩天輪 (低光害版)
+const ferris = new THREE.Group();
+ferris.add(new THREE.Mesh(
+  new THREE.TorusGeometry(400,8,16,100), 
+  new THREE.MeshStandardMaterial({color:0x292e42, emissive:0x3b4261, emissiveIntensity:0.2})
+));
+for(let i=0;i<12;i++){
+  const pod = new THREE.Mesh(
+    new THREE.BoxGeometry(60,80,50), 
+    new THREE.MeshStandardMaterial({
+      color:0x292e42, 
+      emissive:0xbb9af7, 
+      emissiveIntensity:0.2, 
+      transparent:true, 
+      opacity:0.8
+    })
+  );
+  pod.position.set(Math.cos(i/12*Math.PI*2)*400, Math.sin(i/12*Math.PI*2)*400,0);
+  ferris.add(pod);
+}
+ferris.position.set(-2000,600,-1500);
+scene.add(ferris);
+
+// 雲霄飛車軌道
+let curve, frames, trackGroup = new THREE.Group();
+const numSamples = 3000;
+scene.add(trackGroup);
+
+function buildTracks(){
+    while(trackGroup.children.length>0) trackGroup.remove(trackGroup.children[0]);
+    const deg = 45;
+    const rad = deg*(Math.PI/180);
+    const pts = [];
+    const launchHeight = 120 + (Math.tan(rad)*1500);
+    for(let i=0;i<=100;i++){
+        const t=i/100, a=t*Math.PI*2;
+        const x = Math.sin(a)*1800 + Math.sin(a*2)*250;
+        const z = Math.cos(a)*1500;
+        const y = (i<=20) ? THREE.MathUtils.lerp(120,launchHeight,i/20) : Math.max(140, launchHeight*0.45 + Math.sin(a*4)*350);
+        pts.push(new THREE.Vector3(x,y,z));
+    }
+    curve = new THREE.CatmullRomCurve3(pts,true,'centripetal');
+    frames = curve.computeFrenetFrames(numSamples,true);
+    
+    // 降低軌道亮度
+    const railMat = new THREE.MeshStandardMaterial({color:0x292e42, emissive:0x1a1d24, emissiveIntensity:0.1, roughness:0.4, metalness:0.8});
+    const tieMat = new THREE.MeshStandardMaterial({color:0x292e42, emissive:0x3b4261, emissiveIntensity:0.3});
+    
+    for(let offset of [24,-24]){
+        const rPts=[];
+        for(let j=0;j<=numSamples;j++)
+            rPts.push(curve.getPointAt(j/numSamples).add(frames.binormals[j].clone().multiplyScalar(offset)));
+        trackGroup.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rPts,true), numSamples,6,8,true), railMat));
+    }
+    for(let i=0;i<numSamples;i+=15){
+        const p = curve.getPointAt(i/numSamples);
+        const idx = i;
+        const tie = new THREE.Mesh(new THREE.BoxGeometry(80,6,15), tieMat);
+        tie.position.copy(p);
+        tie.setRotationFromMatrix(new THREE.Matrix4().makeBasis(frames.binormals[idx],frames.normals[idx],frames.tangents[idx]));
+        tie.translateY(-5);
+        trackGroup.add(tie);
+        if(i%90===0){
+            const pillar = new THREE.Mesh(new THREE.CylinderGeometry(10,20,p.y,6), railMat);
+            pillar.position.set(p.x,p.y/2,p.z);
+            trackGroup.add(pillar);
+        }
+    }
+    trackGroup.position.x = -1200;
+}
+
+const train=[];
+// 子彈時間變數
+let progress = 0;
+let currentVel = 0.001; 
+let targetVel = 0.001;
+
+// 鏡頭推進變數
+let isTransitioning = false;
+let targetCameraPos = new THREE.Vector3(-1000, 800, -500); // 準備飛向摩天輪的位置
+let targetLookAt = new THREE.Vector3(-2000, 600, -1500);  // 視角對準摩天輪
+
+function addCar(){
+    const isFirstCar = train.length === 0;
+    const car = new THREE.Mesh(
+      new THREE.BoxGeometry(60,40,90), 
+      new THREE.MeshStandardMaterial({
+        color: 0x1e222a, 
+        emissive: isFirstCar ? 0x00ffff : 0x7dcfff,
+        emissiveIntensity: isFirstCar ? 0.8 : 0.3, 
+        wireframe: true 
+      })
+    );
+    scene.add(car);
+    train.push(car);
+}
+
+function updateTrainPosition(){
+    train.forEach((car,i)=>{
+        const cp = (progress - i*0.035 +1)%1;
+        const p = curve.getPointAt(cp);
+        const idx = Math.floor(cp*numSamples);
+        car.position.copy(p).add(trackGroup.position);
+        car.setRotationFromMatrix(new THREE.Matrix4().makeBasis(frames.binormals[idx],frames.normals[idx],frames.tangents[idx]));
+        car.translateY(25);
+
+        // 點光源緊跟第一節車廂
+        if (i === 0) {
+            trainLight.position.copy(car.position);
+            trainLight.position.y += 100;
+        }
+    });
+}
+
+function animate(){
+    requestAnimationFrame(animate);
+    
+    // 平滑過渡當前速度到目標速度 (子彈時間效果)
+    currentVel += (targetVel - currentVel) * 0.05;
+    
+    // 讓摩天輪速度也跟著變慢/變快
+    ferris.rotation.z += (currentVel * 3);
+    
+    progress += currentVel;
+    progress %= 1; 
+    updateTrainPosition();
+    
+    // 執行鏡頭推進 (Camera Transition) 動畫
+    if (isTransitioning) {
+        cameraTPV.position.lerp(targetCameraPos, 0.03); // 平滑移動相機位置
+        controls.target.lerp(targetLookAt, 0.03);       // 平滑改變注視點
+    }
+
+    controls.update();
+    renderer.render(scene,cameraTPV);
+}
+
+// RWD 視窗縮放適應
+window.addEventListener('resize', () => {
+    cameraTPV.aspect = window.innerWidth / window.innerHeight;
+    cameraTPV.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+buildTracks();
+for(let i=0;i<6;i++) addCar();
+animate();
+
+
+/* =========================================
+   NPC 互動、打字邏輯與鏡頭轉場
+========================================= */
+const bubble = document.getElementById('speech-bubble');
+const bubbleText = document.getElementById('bubble-text');
+const rightPanel = document.getElementById('right-panel');
+const navbar = document.getElementById('navbar');
+let typeTimeout;
+
+// 打字機特效函數
+function npcSpeak(text) {
+    bubble.classList.add('active'); 
+    clearTimeout(typeTimeout);      
+    bubbleText.textContent = '';    
+    let i = 0;
+
+    function type() {
+        if (i < text.length) {
+            bubbleText.textContent += text.charAt(i);
+            i++;
+            typeTimeout = setTimeout(type, 40); 
+        }
+    }
+    type();
+}
+
+// 1. 網頁剛載入時的問候
+setTimeout(() => {
+    npcSpeak("目前位於「三角函數」主控台。請選擇你想解析的數據模型。");
+}, 1000);
+
+// 2. 設定各別卡片的滑鼠移入事件 (Hover)
+document.getElementById('trig').addEventListener('mouseenter', () => {
+    if(!isTransitioning) npcSpeak("準備好學習基礎的 Sin、Cos、Tan 定義了嗎？");
+});
+
+document.getElementById('sinecos').addEventListener('mouseenter', () => {
+    if(!isTransitioning) npcSpeak("正餘弦定理可以幫你計算空間的絕對位置喔！");
+});
+
+document.getElementById('sumdiff').addEventListener('mouseenter', () => {
+    if(!isTransitioning) npcSpeak("角度變了怎麼辦？啟動和差角演算法來校準吧！");
+});
+
+// 3. 子彈時間偵測 (滑鼠移入右側面板時，3D背景減速)
+rightPanel.addEventListener('mouseenter', () => {
+    if(!isTransitioning) targetVel = 0.0001; 
+});
+rightPanel.addEventListener('mouseleave', () => {
+    if(!isTransitioning) {
+        targetVel = 0.001;  
+        npcSpeak("如果有問題，隨時點擊卡片讓我為你帶路！");
+    }
+});
+
+// 4. 鏡頭推進特效 (點擊卡片觸發)
+const questCards = document.querySelectorAll('.quest-card');
+questCards.forEach(card => {
+    card.addEventListener('click', (e) => {
+        e.preventDefault(); // 阻擋預設的瞬間跳頁行為
+        const targetUrl = card.getAttribute('href');
+        
+        // 觸發 NPC 語音與狀態
+        npcSpeak("正在為您建立傳送門，準備進行空間躍遷...");
+        isTransitioning = true; 
+        targetVel = 0.005; // 讓背景火車瞬間加速，營造躍遷感
+
+        // 將 UI 介面淡出隱藏
+        rightPanel.style.opacity = '0';
+        navbar.style.opacity = '0';
+        rightPanel.style.pointerEvents = 'none';
+
+        // 設定 2.2 秒後才真正跳轉到下一頁，讓動畫播完
+        setTimeout(() => {
+            window.location.href = targetUrl;
+        }, 2200);
+    });
+});
+
+</script>
+</body>
+</html>

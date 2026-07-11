@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>3D 虛擬數學 - 三角函數</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap');
+
+body { 
+  margin: 0; 
+  font-family: 'Share Tech Mono', 'Segoe UI', sans-serif; 
+  background: #1e222a; 
+  color: #bac2de; 
+  font-size: 18px;
+  overflow-x: hidden;
+}
+
+/* 導覽列 */
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: rgba(30, 34, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(137, 180, 250, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  height: 50px;
+  line-height: 50px;
+}
+.navbar a { 
+  float: left; 
+  color: #89b4fa; 
+  padding: 0 20px; 
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 5px rgba(137, 180, 250, 0.3);
+  transition: 0.3s;
+}
+.navbar a:hover { 
+  background: rgba(137, 180, 250, 0.1); 
+  color: #cdd6f4;
+}
+.dropdown { float: left; }
+.dropbtn { 
+  background: none; border: none; color: #89b4fa; padding: 0 20px; cursor: pointer; 
+  font-size: 16px; line-height: 50px; font-family: 'Share Tech Mono', monospace;
+  text-shadow: 0 0 5px rgba(137, 180, 250, 0.3);
+}
+.dropdown-content {
+  display: none; position: absolute; background: rgba(20, 23, 30, 0.95);
+  border: 1px solid rgba(137, 180, 250, 0.2);
+  min-width: 160px; border-radius: 0 0 8px 8px; overflow: hidden;
+}
+.dropdown-content a { display: block; padding: 12px 20px; color: #7dcfff; }
+.dropdown-content a:hover { background: rgba(125, 207, 255, 0.15); color: #ffffff; }
+.dropdown:hover .dropdown-content { display: block; }
+
+/* 3D 模擬主視窗 */
+#track-container { 
+  width: 100%; height: 55vh; margin-top: 50px; 
+  border-bottom: 2px solid rgba(137, 180, 250, 0.3); 
+  background: #111318;
+  position: relative;
+}
+
+/* 頂部 HUD 狀態面板 */
+#hud-display {
+  position: absolute; top: 20px; right: 20px; background: rgba(20, 23, 30, 0.9); 
+  border: 1px solid #7dcfff; padding: 12px 20px; border-radius: 6px; font-family: 'Orbitron', sans-serif; z-index: 500;
+}
+
+/* 核心內容區 */
+#lesson { 
+  padding: 30px 20px; 
+  max-width: 1300px; 
+  margin: 0 auto; 
+}
+
+h1, h2, h3 { 
+  color: #89b4fa; 
+  font-family: 'Orbitron', sans-serif;
+  text-shadow: 0 0 8px rgba(137, 180, 250, 0.3); 
+}
+h1 { border-left: 4px solid #bb9af7; padding-left: 10px; margin-top: 20px; color: #cdd6f4; font-size: 26px;}
+
+ul { padding-left: 20px; color: #a6adc8; }
+li { margin-bottom: 8px; }
+
+/* 控制面板與排版調整 */
+.lesson-row {
+  display: flex;
+  gap: 25px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.panel-main { flex: 2 1 600px; }
+.panel-side { flex: 1 1 350px; }
+
+.data-card {
+  background: rgba(30, 34, 42, 0.6);
+  border: 1px solid rgba(137, 180, 250, 0.15);
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* 數據核心控制台 */
+.control-console {
+  background: rgba(20, 23, 30, 0.85);
+  border-left: 4px solid #7dcfff;
+  padding: 20px;
+  border-radius: 6px;
+  margin-top: 15px;
+}
+
+input[type=range] {
+  width: 100%; accent-color: #7dcfff; cursor: pointer; margin: 15px 0;
+}
+.value-highlight { color: #7dcfff; font-weight: bold; text-shadow: 0 0 8px rgba(125, 207, 255, 0.4); }
+.angle-display { font-family: 'Orbitron', sans-serif; font-size: 20px; color: #bb9af7; }
+
+svg { 
+  background: rgba(20, 23, 30, 0.5);
+  border: 1px solid rgba(137, 180, 250, 0.15);
+  border-radius: 8px;
+}
+
+.scroll-guide { text-align: center; padding: 20px 0 40px 0; }
+.btn-guide {
+  font-family: 'Orbitron'; font-size: 18px; padding: 12px 35px; color: #00ffff;
+  background: transparent; border: 2px solid #00ffff; border-radius: 50px; cursor: pointer; transition: 0.3s;
+}
+.btn-guide:hover { background: #00ffff; color: #1e222a; box-shadow: 0 0 25px rgba(0, 255, 255, 0.4); }
+
+/* ==========================================================================
+   【最下方獨立遊戲群島區】
+   ========================================================================== */
+#game-island-section {
+  min-height: 100vh; background: radial-gradient(circle at center, #1a1d24 0%, #0f1115 100%);
+  border-top: 3px dashed rgba(137, 180, 250, 0.3); padding: 60px 20px; box-sizing: border-box;
+}
+.island-map-title { text-align: center; margin-bottom: 60px; }
+.island-map-title h2 { font-size: 32px; color: #cdd6f4; }
+
+.island-container { display: flex; justify-content: center; align-items: center; gap: 50px; max-width: 1200px; margin: 0 auto; flex-wrap: wrap; }
+.island-card {
+  background: rgba(30, 34, 42, 0.85); border: 2px solid rgba(137, 180, 250, 0.2); border-radius: 16px;
+  width: 280px; padding: 35px 25px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.4); transition: 0.4s;
+}
+/* 三座島嶼不規則錯落分佈 */
+#island-1 { transform: translateY(-30px); }
+#island-2 { transform: translateY(40px); }
+#island-3 { transform: translateY(-10px); }
+
+.island-card.active { border-color: #7dcfff; box-shadow: 0 0 20px rgba(125, 207, 255, 0.2); }
+.island-card.current-stay { border-color: #00ffff; box-shadow: 0 0 30px rgba(0, 255, 255, 0.5); transform: scale(1.05) !important; }
+.island-card.locked { opacity: 0.25; cursor: not-allowed; transform: translateY(0) !important; }
+
+.island-icon { font-size: 55px; display: inline-block; margin-bottom: 15px; }
+.btn-enter-mission {
+  margin-top: 20px; padding: 12px 28px; background: transparent; border: 1px solid #7dcfff; color: #7dcfff; 
+  font-family: 'Orbitron'; border-radius: 4px; cursor: pointer; transition: 0.3s; width: 100%;
+}
+.island-card.active .btn-enter-mission:hover { background: #7dcfff; color: #1e222a; font-weight: bold; }
+.island-card.current-stay .btn-enter-mission { border-color: #00ffff; color: #00ffff; }
+
+/* 彈出遊戲密碼機 */
+.game-modal {
+  display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 95%; max-width: 520px; background: rgba(20, 23, 30, 0.98); border: 2px solid #00ffff;
+  border-radius: 12px; padding: 25px; z-index: 2000; box-shadow: 0 0 50px rgba(0,255,255,0.3);
+}
+.modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:1999; backdrop-filter: blur(4px); }
+.btn-action { background: #00ffff; color: #1e222a; font-family: 'Orbitron'; font-weight: bold; border: none; padding: 12px 30px; cursor: pointer; margin-top: 20px; border-radius: 4px; width: 100%; font-size: 16px; }
+.btn-close { background: transparent; color: #aaa; border: 1px solid #444; padding: 8px 15px; margin-top: 10px; cursor: pointer; border-radius: 4px; width: 100%; }
+.modal-slider { width: 100%; accent-color: #00ffff; margin: 15px 0; }
+
+.func-graph {
+  background: rgba(20, 23, 30, 0.6);
+  border: 1px solid rgba(125, 207, 255, 0.2);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.axis {
+  stroke: #3b4261;
+  stroke-width: 1;
+}
+
+.grid {
+  stroke: rgba(59, 66, 97, 0.3);
+  stroke-width: 1;
+}
+
+.graph-label {
+  font-size: 12px;
+  fill: #a6adc8;
+  font-family: 'Orbitron';
+}
+
+
+
+</style>
+</head>
+<body>
+
+<div class="navbar">
+  <a href="#" onclick="location.href='index.html'"> 首頁 </a>
+  <div class="dropdown">
+    <button class="dropbtn">數學資料庫 ▼</button>
+    <div class="dropdown-content">
+      <a href="#" onclick="location.href='1-sct-homepage.html'">> 三角函數</a>
+      <a href="#" onclick="location.href='1-lf-homepage.html'">> 線性函數</a>
+      <a href="#" onclick="location.href='game-homepage.html'">> 鐵道系統</a>
+    </div>
+  </div>
+</div>
+
+<div id="track-container">
+  <div id="hud-display">
+    <div style="font-size: 11px; color: #bb9af7; letter-spacing: 2px; font-weight: bold;">VECTOR CORE</div>
+    <div style="font-size: 18px; margin: 5px 0; color: #fff;">FLEET AT: <span id="hud-loc" style="color: #00ffff;">ISLAND 01</span></div>
+    <div style="font-size: 13px; color: #7dcfff;">ENGINE: <span id="hud-status" style="color:#a6e3a1;">STANDBY</span></div>
+  </div>
+</div>
+
+<div id="lesson">
+  <div class="lesson-row">
+    <div class="panel-main">
+      <div class="data-card">
+        <h1>01_ 歷史溯源：三角函數的誕生</h1>
+        <p>三角函數本質上是**「比例的科學」**。當直角三角形的角度固定時，無論三角形放大或縮小，其兩兩邊長的比值永遠是個常數。透過以下歷史脈絡可見端倪：</p>
+        <ul>
+          <li><p><strong class="value-highlight">sin（正弦）：</strong>起源於古印度。觀測星體時，為計算弦長，發現「對邊與斜邊的比值」直接對應空間高度。</p></li>
+          <li><p><strong class="value-highlight">cos（餘弦）：</strong>由古希臘學者系統化，作為正弦的「餘角補足」，量測「鄰邊與斜邊的比值」，掌控水平投影距離。</p></li>
+          <li><p><strong class="value-highlight">tan（正切）：</strong>起源於阿拉伯半島觀測日晷陰影。即「對邊與鄰邊的比值」，在現代物理中，它正是雲霄飛車的**真實瞬間坡度**。</p></li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="panel-side">
+      <div class="data-card" style="text-align: center;">
+        <h3>起源與文化傳播軸</h3>
+        <svg width="100%" height="210" viewBox="0 0 350 200">
+          <line x1="30" y1="100" x2="320" y2="100" stroke="#7dcfff" stroke-width="2"/>
+          <circle cx="80" cy="100" r="8" fill="#1e222a" stroke="#bb9af7" stroke-width="3"/>
+          <text x="80" y="70" fill="#bac2de" text-anchor="middle">sin</text>
+          
+          <circle cx="175" cy="100" r="8" fill="#1e222a" stroke="#89b4fa" stroke-width="3"/>
+          <text x="175" y="70" fill="#bac2de" text-anchor="middle">cos</text>
+          
+          <circle cx="270" cy="100" r="8" fill="#1e222a" stroke="#a6e3a1" stroke-width="3"/>
+          <text x="270" y="70" fill="#bac2de" text-anchor="middle">tan</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <h1>02_ 核心協議：動態幾何比例分析</h1>
+  <div class="lesson-row">
+    <div class="panel-main">
+      <div class="data-card">
+        <h3>控制台：調校發射軌道夾角 $\theta$</h3>
+        <p style="color:#a6adc8; margin: 0;">拖曳滑桿觀察右側投影：**當斜邊固定時，對邊與鄰邊長度如何此消彼長，進而同步影響三角函數比值**：</p>
+        
+        <div class="control-console">
+          <div class="angle-display">目前角度 θ = <span id="thetaValue" class="value-highlight">35</span>°</div>
+          <input type="range" id="angleSlider" min="15" max="60" value="35">
+
+          <p style="margin: 10px 0 0 0; line-height: 1.9; font-family: monospace; font-size: 19px;">
+            &gt; sin θ = 對 / 斜 = <span id="sinRatioText" style="color:#7dcfff;"></span> = <span id="sinValue" class="value-highlight"></span><br>
+            &gt; cos θ = 鄰 / 斜 = <span id="cosRatioText" style="color:#89b4fa;"></span> = <span id="cosValue" class="value-highlight"></span><br>
+            &gt; tan θ = 對 / 鄰 = <span id="tanRatioText" style="color:#a6e3a1;"></span> = <span id="tanValue" class="value-highlight"></span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-side">
+      <div class="data-card" style="text-align: center;">
+        <h3>幾何雷達二維投影 (斜邊長固定 = 220)</h3>
+        <svg width="100%" height="220" viewBox="0 0 420 300">
+          <polygon id="triangleShape" points="60,240 320,240 320,80" fill="rgba(125, 207, 255, 0.05)" stroke="#7dcfff" stroke-width="3"/>
+          <path id="angleArc" d="M100 240 A40 40 0 0 0 60 240" fill="none" stroke="#bb9af7" stroke-width="3"/>
+          <text id="thetaText" x="120" y="220" font-size="18" font-family="Orbitron" fill="#bb9af7">θ</text>
+          
+          <text id="oppLabel" x="335" y="150" fill="#7dcfff" font-weight="bold">對邊: -</text>
+          <text id="adjLabel" x="150" y="270" fill="#89b4fa" font-weight="bold">鄰邊: -</text>
+          <text id="hypLabel" x="120" y="110" fill="#a6e3a1">斜邊: 220.0</text>
+        </svg>
+      </div>
+    </div>
+
+    <h1>03_ 線性圖形：sin / cos / tan 的直線化觀測</h1>
+
+<div class="lesson-row">
+  <div class="panel-main">
+    <div class="data-card">
+      <h3>幾何觀測報告：非線性函數的「線性拘束」</h3>
+
+      <p>
+        在數學分析中，sin、cos、tan 本質是<strong>非線性函數</strong>，但在小角度或局部區間中，
+        可以被「線性近似」──這種行為就像把自由曲線關進直線監獄，因此稱為：
+        <span class="value-highlight">線性圖形（Linear Confinement）</span>
+      </p>
+
+      <ul>
+        <li>
+          <p><strong class="value-highlight">sin θ ≈ θ：</strong>當 θ 很小時，正弦函數被壓縮成一條直線，代表「高度 = 角度本身」。</p>
+        </li>
+
+        <li>
+          <p><strong class="value-highlight">cos θ ≈ 1：</strong>在小角度下幾乎不變，像被鎖在 1 的水平監獄線上。</p>
+        </li>
+
+        <li>
+          <p><strong class="value-highlight">tan θ ≈ θ：</strong>斜率直接等於角度，代表「坡度被完全線性化」。</p>
+        </li>
+      </ul>
+
+      <p>
+        🔻 結論：當角度趨近於 0，三角函數不再彎曲，而是被強制服從「直線法則」。
+      </p>
+    </div>
+  </div>
+
+  <div class="panel-side">
+  <div class="data-card" style="text-align:center;">
+    <h3>線性化對照視覺（獨立座標系統）</h3>
+
+    <!-- SIN -->
+    <div class="func-graph">
+  <div style="color:#7dcfff;font-weight:bold;">sin θ</div>
+  <svg width="100%" height="140" viewBox="0 0 180 140">
+
+    <line x1="20" y1="100" x2="170" y2="100" class="axis"/>
+    <line x1="20" y1="10" x2="20" y2="130" class="axis"/>
+
+    <polyline id="sinGraph"
+      fill="none"
+      stroke="#7dcfff"
+      stroke-width="2"/>
+
+  </svg>
+</div>
+
+    <!-- COS -->
+    <div class="func-graph">
+  <div style="color:#89b4fa;font-weight:bold;">cos θ</div>
+  <svg width="100%" height="140" viewBox="0 0 180 140">
+
+    <line x1="20" y1="100" x2="170" y2="100" class="axis"/>
+    <line x1="20" y1="10" x2="20" y2="130" class="axis"/>
+
+    <polyline id="cosGraph"
+      fill="none"
+      stroke="#89b4fa"
+      stroke-width="2"/>
+
+  </svg>
+</div>
+
+    <!-- TAN -->
+    <div class="func-graph">
+  <div style="color:#a6e3a1;font-weight:bold;">tan θ</div>
+  <svg width="100%" height="140" viewBox="0 0 180 140">
+
+    <line x1="20" y1="100" x2="170" y2="100" class="axis"/>
+    <line x1="20" y1="10" x2="20" y2="130" class="axis"/>
+
+    <polyline id="tanGraph"
+      fill="none"
+      stroke="#a6e3a1"
+      stroke-width="2"/>
+
+  </svg>
+</div>
+
+    <p style="font-size:12px;color:#a6adc8;margin-top:10px;">
+      每個函數獨立座標系：黑軸 = 空間基準｜實線 = 真實函數｜虛線 = 線性近似
+    </p>
+    
+  </div>
+</div>
+
+  
+  </div>
+
+</div>
+
+
+
+  
+
+<section id="game-island-section">
+  <div class="island-map-title">
+    <h2>MISSION PROTOCOL : 幾何圖形「盲測」解碼器</h2>
+    <p style="color: #a6adc8; max-width:800px; margin:0 auto;">
+      **注意：**解碼端已關閉即時數值回饋！你必須化身為幾何工程師，觀察彈出視窗內**動態直角三角形的邊長形狀比例**，推算正確的角度協定值，才能啟動列車跨海前行！
+    </p>
+  </div>
+
+  <div class="island-container">
+    <div class="island-card active current-stay" id="island-1">
+      <span class="island-icon">🌋</span>
+      <h3>關卡 01 . 火山島</h3>
+      <p style="font-size: 14px; color: #a6adc8;">
+      解鎖協定：系統隨機生成直角三角形，
+      請判斷並標記<br>
+      <span style="color:#bb9af7; font-weight:bold; font-size:16px;">
+      哪一邊是對邊 / 鄰邊 / 斜邊
+      </span>
+      </p>
+      <button class="btn-enter-mission" id="btn-island-1" onclick="openMission(1)">開啟幾何解鎖</button>
+    </div>
+    <div class="island-card locked" id="island-2">
+      <span class="island-icon">⚡</span>
+      <h3>關卡 02 . 雷霆島</h3>
+      <p style="font-size: 14px; color: #a6adc8;">
+      解鎖協定：觀察三種函數圖形，
+      請判斷<br>
+      <span style="color:#89b4fa; font-weight:bold; font-size:16px;">
+      哪一條是 sin / cos / tan
+      </span>
+      （禁止使用數值提示）
+      </p>
+      <button class="btn-enter-mission" id="btn-island-2" onclick="openMission(2)" disabled>密碼鎖定中</button>
+    </div>
+    <div class="island-card locked" id="island-3">
+      <span class="island-icon">❄️</span>
+      <h3>關卡 03 . 冰封島</h3>
+      <p style="font-size: 14px; color: #a6adc8;">
+      解鎖協定：已知直角三角形邊長比例，
+      請反推角度 α<br>
+      <span style="color:#a6e3a1; font-weight:bold; font-size:16px;">
+      由邊長比例推算 θ（反三角推理）
+      </span>
+      </p>
+      <button class="btn-enter-mission" id="btn-island-3" onclick="openMission(3)" disabled>密碼鎖定中</button>
+    </div>
+  </div>
+</section>
+
+<div class="modal-overlay" id="modalOverlay"></div>
+<div class="game-modal" id="gameModal">
+  <h2 id="modalTitle">島嶼幾何密碼鎖</h2>
+  <p id="modalDesc" style="font-size: 15px; color: #a6adc8; margin-bottom: 10px;"></p>
+  
+  <div style="text-align:center; margin: 15px 0;">
+    <svg width="100%" height="160" viewBox="0 0 400 180" style="background:rgba(0,0,0,0.4); border:1px solid #00ffff;">
+      <polygon id="modalTriangleShape" points="50,140 300,140 300,50" fill="rgba(0, 255, 255, 0.05)" stroke="#00ffff" stroke-width="2.5"/>
+      <path id="modalAngleArc" d="M90 140 A40 40 0 0 0 50 140" fill="none" stroke="#bb9af7" stroke-width="2.5"/>
+      <text x="315" y="95" id="modalOppLabel" fill="#7dcfff" font-size="14">對邊</text>
+      <text x="150" y="165" id="modalAdjLabel" fill="#89b4fa" font-size="14">鄰邊</text>
+      <text x="130" y="70" fill="#a6e3a1" font-size="14">斜邊</text>
+    </svg>
+  </div>
+
+  <div class="control-console" style="background: rgba(0,0,0,0.3); padding:15px;">
+    <div class="angle-display" style="font-size: 18px;">調校預設夾角 α = <span id="modalAngleLabel" style="color:#00ffff;">35</span>°</div>
+    <input type="range" id="modalSlider" class="modal-slider" min="15" max="75" value="35">
+    <div style="margin-top: 5px; font-family: monospace; font-size: 15px; color:#e0af68; text-align:center;">
+      ⚠️ [警告] 核心函數數值傳輸已被屏蔽，請純粹基於上方圖形比例判定。
+    </div>
+  </div>
+  <button class="btn-action" id="modalActionBtn" onclick="verifyMissionSolution()">驗證演算並發車</button>
+  <button class="btn-close" onclick="closeMission()">關閉</button>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+document.getElementById("sinGraph")
+  .setAttribute("points", generateTrigPoints("sin"));
+
+document.getElementById("cosGraph")
+  .setAttribute("points", generateTrigPoints("cos"));
+
+document.getElementById("tanGraph")
+  .setAttribute("points", generateTrigPoints("tan"));
+
+// --- UI 元素綁定 ---
+const slider = document.getElementById("angleSlider");
+const sinValue = document.getElementById("sinValue");
+const cosValue = document.getElementById("cosValue");
+const tanValue = document.getElementById("tanValue");
+const sinRatioText = document.getElementById("sinRatioText");
+const cosRatioText = document.getElementById("cosRatioText");
+const tanRatioText = document.getElementById("tanRatioText");
+
+const thetaValue = document.getElementById("thetaValue");
+const thetaText = document.getElementById("thetaText");
+const triangle = document.getElementById("triangleShape");
+const angleArc = document.getElementById("angleArc");
+const oppLabel = document.getElementById("oppLabel");
+const adjLabel = document.getElementById("adjLabel");
+
+const hudLoc = document.getElementById("hud-loc");
+const hudStatus = document.getElementById("hud-status");
+
+const modalSlider = document.getElementById("modalSlider");
+const modalAngleLabel = document.getElementById("modalAngleLabel");
+const modalTriangleShape = document.getElementById("modalTriangleShape");
+const modalAngleArc = document.getElementById("modalAngleArc");
+const modalOppLabel = document.getElementById("modalOppLabel");
+const modalAdjLabel = document.getElementById("modalAdjLabel");
+
+// --- 3D 場景建構 ---
+const container = document.getElementById('track-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1e222a);
+scene.fog = new THREE.FogExp2(0x1e222a, 0.0002);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+container.appendChild(renderer.domElement);
+
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth/container.clientHeight, 1, 20000);
+camera.position.set(2800, 1600, 2400);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.maxPolarAngle = Math.PI / 2 - 0.05;
+
+scene.add(new THREE.AmbientLight(0xcdd6f4, 0.2));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.4);
+dirLight.position.set(1000, 2000, 1000);
+scene.add(dirLight);
+
+const trainLight = new THREE.PointLight(0x7dcfff, 400000, 1800);
+scene.add(trainLight);
+
+// 全息網格地面
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(20000,20000), new THREE.MeshStandardMaterial({color:0x111318, roughness:0.8}));
+ground.rotation.x = -Math.PI/2;
+scene.add(ground);
+const gridHelper = new THREE.GridHelper(20000, 100, 0x3b4261, 0x1a1d24);
+scene.add(gridHelper);
+
+// 背景裝飾：摩天輪
+const ferris = new THREE.Group();
+ferris.add(new THREE.Mesh(new THREE.TorusGeometry(400,8,16,100), new THREE.MeshStandardMaterial({color:0x292e42, emissive:0x3b4261, emissiveIntensity:0.2})));
+for(let i=0; i<12; i++){
+  const pod = new THREE.Mesh(new THREE.BoxGeometry(60,80,50), new THREE.MeshStandardMaterial({color:0x292e42, wireframe:true}));
+  pod.position.set(Math.cos(i/12*Math.PI*2)*400, Math.sin(i/12*Math.PI*2)*400, 0);
+  ferris.add(pod);
+}
+ferris.position.set(-2200, 600, -1500);
+scene.add(ferris);
+
+// 核心軌道群組
+let curve, frames;
+const trackGroup = new THREE.Group();
+scene.add(trackGroup);
+const numSamples = 2000;
+
+function buildDynamicTracks(angleDeg) {
+  while(trackGroup.children.length > 0) {
+    trackGroup.remove(trackGroup.children[0]);
+  }
+
+  const rad = angleDeg * Math.PI / 180;
+  const pts = [];
+  const baseHorizontal = 1500;
+  const launchHeight = 120 + (Math.tan(rad) * baseHorizontal);
+
+  for(let i=0; i<=100; i++){
+    const t = i/100; 
+    const a = t * Math.PI * 2;
+    const x = Math.sin(a) * 1800 + Math.sin(a*2)*200;
+    const z = Math.cos(a) * 1500;
+    let noise = isCorrupted ? (Math.random() - 0.5) * trackDamage * 600 : 0;
+
+    let y = (i <= 20)
+      ? THREE.MathUtils.lerp(120, launchHeight, i/20)
+      : Math.max(
+          140,
+          launchHeight * 0.45 + Math.sin(a * 4) * 350 + noise
+        );
+    pts.push(new THREE.Vector3(x, y, z));
+  }
+
+  curve = new THREE.CatmullRomCurve3(pts, true, 'centripetal');
+  frames = curve.computeFrenetFrames(numSamples, true);
+
+  const railMat = new THREE.MeshStandardMaterial({ color: 0x292e42, metalness: 0.8, roughness: 0.2 });
+  
+  for (let offset of [24, -24]) {
+    const rPts = [];
+    for (let j=0; j<=numSamples; j++) {
+      rPts.push(curve.getPointAt(j/numSamples).add(frames.binormals[j].clone().multiplyScalar(offset)));
+    }
+    trackGroup.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rPts, true), numSamples, 6, 8, true), railMat));
+  }
+
+  for(let i=0; i<numSamples; i+=20){
+    const p = curve.getPointAt(i/numSamples);
+    if(i % 100 === 0){
+      const pillar = new THREE.Mesh(new THREE.CylinderGeometry(8, 16, p.y, 6), railMat);
+      pillar.position.set(p.x, p.y/2, p.z);
+      trackGroup.add(pillar);
+    }
+  }
+}
+
+function triggerTrackDamage() {
+  trackDamage = Math.min(1, trackDamage + 0.25);
+  isCorrupted = true;
+
+  hudStatus.innerText = "SYSTEM ERROR";
+  hudStatus.style.color = "#ff4d4d";
+
+  // 讓整個場景變暗
+  scene.fog.density += 0.00008;
+
+  // 軌道變紅警告
+  trackGroup.children.forEach(obj => {
+    if (obj.material) {
+      obj.material.color.setHex(0xff4d4d);
+    }
+  });
+}
+
+// 雲霄飛車列車組
+
+let trackDamage = 0; // 0~1
+let isCorrupted = false;
+
+const train = [];
+let progress = 0;
+
+let isTransitAnimating = false;
+let transitTargetStation = 0; 
+const stationProgressOffsets = [0.0, 0.33, 0.66]; 
+
+function addCar(isFirst) {
+  const car = new THREE.Mesh(
+    new THREE.BoxGeometry(60, 40, 90), 
+    new THREE.MeshStandardMaterial({ color: 0x1e222a, emissive: isFirst ? 0x00ffff : 0x7dcfff, emissiveIntensity: isFirst ? 0.8 : 0.3, wireframe: true })
+  );
+  scene.add(car);
+  train.push(car);
+}
+
+function updateTrain() {
+  train.forEach((car, i) => {
+    const cp = (progress - i * 0.025 + 1) % 1;
+    const p = curve.getPointAt(cp);
+    const idx = Math.floor(cp * numSamples);
+
+    car.position.copy(p);
+    car.setRotationFromMatrix(new THREE.Matrix4().makeBasis(frames.binormals[idx], frames.normals[idx], frames.tangents[idx]));
+    car.translateY(25);
+
+    const wobble = isCorrupted ? (Math.random() - 0.5) * trackDamage * 20 : 0;
+    car.rotation.z = wobble;
+    car.rotation.x = wobble * 0.5;
+
+    if (i === 0) {
+      trainLight.position.copy(car.position).y += 60;
+    }
+  });
+}
+
+function generateTrigPoints(func, color) {
+  const width = 160;
+  const height = 120;
+  const samples = 80;
+
+  const points = [];
+
+  for (let i = 0; i <= samples; i++) {
+    const xDeg = (i / samples) * 90; // 0° ~ 90°
+    const rad = xDeg * Math.PI / 180;
+
+    let y;
+    if (func === "sin") y = Math.sin(rad);
+    if (func === "cos") y = Math.cos(rad);
+    if (func === "tan") y = Math.tan(rad);
+
+    // tan 限制避免爆炸（遊戲安全顯示）
+    if (func === "tan" && Math.abs(y) > 3) y = 3 * Math.sign(y);
+
+    const x = 20 + (i / samples) * width;
+    const yPos = 100 - y * 40;
+
+    points.push(`${x},${yPos}`);
+  }
+
+  return points.join(" ");
+}
+
+// --- 核心幾何同步更新機制（實裝水平翻轉與動態鷹架） ---
+function synchronizeModules() {
+  if (isTransitAnimating) return; 
+  const angle = parseFloat(slider.value);
+  const rad = angle * Math.PI / 180;
+  
+  buildDynamicTracks(angle);
+
+  // 1. 計算幾何比值（固定斜邊 = 220）
+  const hyp = 220; 
+  const opp = Math.sin(rad) * hyp; 
+  const adj = Math.cos(rad) * hyp; 
+  
+  // 基準點：左下角為動態角頂點
+  const x0 = 60, y0 = 240; 
+
+  // 2. 更新 SVG 頂點座標 (水平翻轉：直角在右下角)
+  triangle.setAttribute("points", `${x0},${y0} ${x0 + adj},${y0} ${x0 + adj},${y0 - opp}`);
+
+  // 3. 更新動態圓弧
+  const r = 40; 
+  const arcStartX = x0 + r;
+  const arcStartY = y0;
+  const arcEndX = x0 + r * Math.cos(rad);
+  const arcEndY = y0 - r * Math.sin(rad);
+  angleArc.setAttribute("d", `M ${arcStartX} ${arcStartY} A ${r} ${r} 0 0,0 ${arcEndX} ${arcEndY}`);
+
+  // 4. 更新 θ 文字標籤與動態邊長數值
+  thetaText.setAttribute("x", x0 + r + 15);
+  thetaText.setAttribute("y", y0 - 12);
+  thetaText.textContent = `θ = ${angle}°`;
+
+  oppLabel.innerText = `對邊(高): ${opp.toFixed(1)}`;
+  adjLabel.innerText = `鄰邊(寬): ${adj.toFixed(1)}`;
+  
+  // 讓對邊與鄰邊的文字隨圖形動態位移，防止重疊
+  oppLabel.setAttribute("x", x0 + adj + 12);
+  oppLabel.setAttribute("y", y0 - (opp / 2) + 5);
+  adjLabel.setAttribute("x", x0 + (adj / 2) - 35);
+
+  // 5. 更新比例公式面板（文字鷹架）
+  sinRatioText.innerText = `(${opp.toFixed(1)} / 220.0)`;
+  cosRatioText.innerText = `(${adj.toFixed(1)} / 220.0)`;
+  tanRatioText.innerText = `(${opp.toFixed(1)} / ${adj.toFixed(1)})`;
+
+  sinValue.innerText = Math.sin(rad).toFixed(3);
+  cosValue.innerText = Math.cos(rad).toFixed(3);
+  tanValue.innerText = Math.tan(rad).toFixed(3);
+  thetaValue.innerText = angle;
+}
+
+// --- 遊戲島嶼盲測核心邏輯 ---
+let currentActiveMission = 1;
+
+function updateModalResult() {
+  const angle = parseFloat(modalSlider.value);
+  const rad = angle * Math.PI / 180;
+  modalAngleLabel.innerText = angle;
+  
+  // 盲測視窗專用的 SVG 幾何拉伸（不給數值，只給純粹圖形比例）
+  const mHyp = 140;
+  const mOpp = Math.sin(rad) * mHyp;
+  const mAdj = Math.cos(rad) * mHyp;
+  const mx0 = 50, my0 = 140;
+
+  modalTriangleShape.setAttribute("points", `${mx0},${my0} ${mx0 + mAdj},${my0} ${mx0 + mAdj},${my0 - mOpp}`);
+  
+  const mr = 35;
+  const marcEndX = mx0 + mr * Math.cos(rad);
+  const marcEndY = my0 - mr * Math.sin(rad);
+  modalAngleArc.setAttribute("d", `M ${mx0 + mr} ${my0} A ${mr} ${mr} 0 0,0 ${marcEndX} ${marcEndY}`);
+
+  // 動態挪動盲測標籤
+  modalOppLabel.setAttribute("x", mx0 + mAdj + 10);
+  modalOppLabel.setAttribute("y", my0 - (mOpp / 2) + 5);
+  modalAdjLabel.setAttribute("x", mx0 + (mAdj / 2) - 15);
+}
+modalSlider.addEventListener("input", updateModalResult);
+
+window.openMission = function(id) {
+  if(id !== currentActiveMission) return;
+  document.getElementById("modalOverlay").style.display = "block";
+  document.getElementById("gameModal").style.display = "block";
+  modalSlider.value = 35; 
+  updateModalResult();
+
+  if(id === 1) {
+    document.getElementById("modalTitle").innerText = "🌋 火山島：正弦脈衝同步";
+    document.getElementById("modalDesc").innerText = "【任務】調校角度 α，使「對邊高」恰好縮減為「斜邊長」的一半（即 sin α = 0.5）。";
+  } else if(id === 2) {
+    document.getElementById("modalTitle").innerText = "⚡ 雷霆島：餘弦平衡共振";
+    document.getElementById("modalDesc").innerText = "【任務】調校角度 α，使底部的「鄰邊寬」與右側的「對邊高」形成完全等長的完美等腰狀態（即 cos α = sin α）。";
+  } else if(id === 3) {
+    document.getElementById("modalTitle").innerText = "❄️ 冰封島：正切陡度極限";
+    document.getElementById("modalDesc").innerText = "【任務】調校角度 α，使坡度大幅拉高，讓「對邊高」膨脹為「鄰邊寬」的 1.732 倍（即 tan α = √3）。";
+  }
+}
+
+window.closeMission = function() {
+  document.getElementById("modalOverlay").style.display = "none";
+  document.getElementById("gameModal").style.display = "none";
+}
+
+window.verifyMissionSolution = function() {
+  const angle = parseFloat(modalSlider.value);
+  let passed = false;
+
+  if(currentActiveMission === 1) passed = (angle === 30);      // sin(30°) = 0.5
+  else if(currentActiveMission === 2) passed = (angle === 45);  // 等腰直角 45°
+  else if(currentActiveMission === 3) passed = (angle === 60);  // tan(60°) = 1.732
+
+  if(passed) {
+    closeMission();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => { triggerTransitAnimation(); }, 800);
+  } else {
+  triggerTrackDamage();
+
+  setTimeout(() => {
+    alert("❌ 幾何失衡！軌道結構正在崩壞！");
+  }, 100);
+}
+}
+
+function triggerTransitAnimation() {
+  isTransitAnimating = true;
+  hudStatus.innerText = "LAUNCHING...";
+  hudStatus.style.color = "#00ffff";
+  transitTargetStation = currentActiveMission; 
+}
+
+function completeStationTransit() {
+  isTransitAnimating = false;
+  currentActiveMission++;
+  
+  hudLoc.innerText = `ISLAND 0${currentActiveMission <= 3 ? currentActiveMission : 3}`;
+  hudStatus.innerText = "STANDBY";
+  hudStatus.style.color = "#a6e3a1";
+
+  document.querySelectorAll(".island-card").forEach(card => card.classList.remove("active", "current-stay"));
+  
+  if (currentActiveMission <= 3) {
+    const nextCard = document.getElementById(`island-${currentActiveMission}`);
+    nextCard.classList.remove("locked");
+    nextCard.classList.add("active", "current-stay");
+    
+    const nextBtn = document.getElementById(`btn-island-${currentActiveMission}`);
+    nextBtn.removeAttribute("disabled");
+    nextBtn.innerText = "進入幾何解鎖";
+
+    setTimeout(() => {
+      alert(`✨ 解鎖成功！3D 雲霄飛車已透過比值協定平滑駛入第 0${currentActiveMission} 關島嶼！`);
+      document.getElementById('game-island-section').scrollIntoView({ behavior: 'smooth' });
+    }, 500);
+  } else {
+    setTimeout(() => {
+      alert("🏆 遠端幾何協定全數竣工！您已成功運用「形狀比例直覺」打通了所有的鐵道群島！");
+    }, 500);
+  }
+}
+
+// --- 初始化與主迴圈 ---
+slider.addEventListener("input", synchronizeModules);
+
+addCar(true);
+for(let i=0; i<3; i++) addCar(false);
+
+synchronizeModules();
+
+function animate() {
+  requestAnimationFrame(animate);
+  ferris.rotation.z += 0.001;
+
+  if (isTransitAnimating) {
+    const targetProgress = stationProgressOffsets[transitTargetStation % 3];
+    let diff = targetProgress - progress;
+    if (diff < 0) diff += 1.0; 
+
+    if (diff < 0.005) {
+      progress = targetProgress;
+      completeStationTransit();
+    } else {
+      progress += 0.006; 
+    }
+  } else {
+    const currentBase = stationProgressOffsets[(currentActiveMission - 1) % 3];
+    progress = currentBase;
+  }
+
+  updateTrain();
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+if (trackDamage > 0) {
+  trackDamage *= 0.999; // 緩慢修復（除非一直答錯）
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+</script>
+
+</body>
+</html>

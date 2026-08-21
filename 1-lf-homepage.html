@@ -282,7 +282,7 @@ canvas { display: block; }
 <body>
 
 <div class="navbar" id="navbar">
-  <a href="#" onclick="location.href='index.html'">[ 首頁 ]</a>
+  <a href="#" onclick="location.href='index.html'">首頁</a>
   <div class="dropdown">
     <button class="dropbtn">數學資料庫 ▼</button>
     <div class="dropdown-content">
@@ -328,8 +328,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 // --- 3D 場景配置 ---
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x1e222a);
-scene.fog = new THREE.FogExp2(0x1e222a, 0.0002);
+scene.background = new THREE.Color(0xfba58c);  // 溫暖夕陽橘粉色
+scene.fog = new THREE.Fog(0xfba58c, 3000, 15000);
 
 const renderer = new THREE.WebGLRenderer({ antialias:true, logarithmicDepthBuffer:true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -344,16 +344,17 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 
 scene.add(new THREE.AmbientLight(0xcdd6f4, 0.15));
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.3);
+const dirLight = new THREE.DirectionalLight(0xffd1a4, 2.0); // 暖黃夕陽光
 dirLight.position.set(1000, 2000, 1000);
 scene.add(dirLight);
+scene.add(new THREE.AmbientLight(0xffe4d6, 0.8)); // 暖色環境光
 
 const trainLight = new THREE.PointLight(0x7dcfff, 300000, 1500);
 scene.add(trainLight);
 
 const ground = new THREE.Mesh(
   new THREE.PlaneGeometry(20000,20000), 
-  new THREE.MeshStandardMaterial({color:0x111318, roughness: 0.8})
+  new THREE.MeshStandardMaterial({color:0x34495e, roughness: 0.8})
 );
 ground.rotation.x = -Math.PI/2;
 ground.receiveShadow = true;
@@ -399,7 +400,7 @@ function buildTracks(){
     curve = new THREE.CatmullRomCurve3(pts,true,'centripetal');
     frames = curve.computeFrenetFrames(numSamples,true);
     
-    const railMat = new THREE.MeshStandardMaterial({color:0x292e42, emissive:0x1a1d24, emissiveIntensity:0.1, roughness:0.4, metalness:0.8});
+    const railMat = new THREE.MeshStandardMaterial({color:0x222222, emissive:0x1a1d24, emissiveIntensity:0.1, roughness:0.4, metalness:0.8});
     const tieMat = new THREE.MeshStandardMaterial({color:0x292e42, emissive:0x3b4261, emissiveIntensity:0.3});
     
     for(let offset of [24,-24]){
@@ -440,7 +441,7 @@ function addCar(){
     const car = new THREE.Mesh(
       new THREE.BoxGeometry(60,40,90), 
       new THREE.MeshStandardMaterial({
-        color: 0x1e222a, emissive: isFirstCar ? 0x00ffff : 0x7dcfff, emissiveIntensity: isFirstCar ? 0.8 : 0.3, wireframe: true 
+        color: 0x1e222a, emissive: isFirstCar ? 0xd32f2f : 0x795548, emissiveIntensity: isFirstCar ? 0.8 : 0.3, wireframe: true 
       })
     );
     scene.add(car);

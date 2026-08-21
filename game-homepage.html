@@ -2,277 +2,158 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>虛擬軌道演算模組 | 物理引擎 v17.0</title>
+    <title>3D 鐵道嘉年華 | 物理實驗室 v17.0</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap');
-
-        :root { 
-            /* 護眼科幻配色系統 */
-            --accent: #bb9af7;      /* 薰衣草紫 (強調色) */
-            --primary: #89b4fa;     /* 天際藍 (主色/UI) */
-            --ui-bg: rgba(30, 34, 42, 0.75); /* 深藍灰毛玻璃 */
-            --record: #a6e3a1;      /* 莫蘭迪綠 (數據/成功) */
-            --text-main: #bac2de;   /* 柔和文字色 */
-            --bg-main: #1e222a;     /* 主背景色 */
-            
-            /* 物理向量專用色 */
-            --force-sin: #f38ba8;   /* 柔和粉紅 (下滑分力) */
-            --force-cos: #89b4fa;   /* 天際藍 (正向壓力) */
-        }
-
-        body { 
-            margin: 0; 
-            overflow: hidden; 
-            background-color: var(--bg-main); 
-            font-family: 'Share Tech Mono', sans-serif; 
-            color: var(--text-main);
-        }
-
-        /* ===== 上方導覽列 ===== */
-        .navbar {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: rgba(30, 34, 42, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(137, 180, 250, 0.2);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-        }
-
-        .navbar a {
-            float: left;
-            color: var(--primary);
-            padding: 14px 20px;
-            text-decoration: none;
-            text-transform: uppercase;
-            text-shadow: 0 0 5px rgba(137, 180, 250, 0.3);
-            transition: 0.3s;
-        }
-
-        .navbar a:hover {
-            text-shadow: 0 0 8px rgba(205, 214, 244, 0.6);
-            background: rgba(137, 180, 250, 0.1);
-            color: #cdd6f4;
-        }
-
-        .dropdown { float: left; }
-
-        .dropbtn {
-            background: none;
-            border: none;
-            color: var(--primary);
-            padding: 14px 20px;
-            cursor: pointer;
-            font-size: 16px;
-            font-family: 'Share Tech Mono', monospace;
-            text-shadow: 0 0 5px rgba(137, 180, 250, 0.3);
-            text-transform: uppercase;
-            transition: 0.3s;
-        }
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background: rgba(20, 23, 30, 0.95);
-            min-width: 160px;
-            border: 1px solid rgba(137, 180, 250, 0.2);
-            border-top: none;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(12px);
-            border-radius: 0 0 8px 8px;
-            overflow: hidden;
-        }
-
-        .dropdown-content a {
-            display: block;
-            padding: 12px 20px;
-            color: #7dcfff;
-            text-shadow: none;
-        }
-
-        .dropdown-content a:hover {
-            background: rgba(125, 207, 255, 0.15);
-            color: #ffffff;
-        }
-
-        .dropdown:hover .dropdown-content { display: block; }
-        .dropdown:hover .dropbtn { background: rgba(137, 180, 250, 0.1); color: #cdd6f4;}
-
-        /* ===== 左側終端機面板 ===== */
+/* 上方導覽列 */
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: rgba(30, 34, 42, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(137, 180, 250, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  height: 50px;
+  line-height: 50px;
+  transition: opacity 0.5s ease; /* 新增淡出過渡 */
+}
+.navbar a { 
+  float: left; 
+  color: #89b4fa; 
+  padding: 0 20px; 
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 5px rgba(137, 180, 250, 0.3);
+  transition: 0.3s;
+}
+.navbar a:hover { 
+  background: rgba(137, 180, 250, 0.1); 
+  color: #cdd6f4;
+  text-shadow: 0 0 8px rgba(205, 214, 244, 0.6);
+}
+.dropdown { float: left; }
+.dropbtn { 
+  background: none; 
+  border: none; 
+  color: #89b4fa; 
+  padding: 0 20px; 
+  cursor: pointer; 
+  font-size: 16px; 
+  line-height: 50px;
+  font-family: 'Share Tech Mono', monospace;
+  text-shadow: 0 0 5px rgba(137, 180, 250, 0.3);
+  transition: 0.3s;
+}
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background: rgba(20, 23, 30, 0.95);
+  border: 1px solid rgba(137, 180, 250, 0.2);
+  border-top: none;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  min-width: 160px;
+  backdrop-filter: blur(12px);
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+}
+.dropdown-content a { 
+  display: block; 
+  padding: 12px 20px; 
+  color: #7dcfff;
+  text-shadow: none;
+}
+.dropdown-content a:hover { 
+  background: rgba(125, 207, 255, 0.15); 
+  color: #ffffff;
+}
+.dropdown:hover .dropdown-content { display: block; }
+.dropdown:hover .dropbtn { background: rgba(137, 180, 250, 0.1); color: #cdd6f4;}
+        :root { --accent: #ffeb3b; --primary: #d32f2f; --ui-bg: rgba(20, 20, 30, 0.9); --record: #ffd700; }
+        body { margin: 0; overflow: hidden; background-color: #2c3e50; font-family: 'Segoe UI', sans-serif; }
+        
         #left-panel {
             position: absolute; top: 0; left: 0; bottom: 0; width: 300px;
             background: var(--ui-bg); backdrop-filter: blur(20px);
-            padding: 70px 20px 30px; /* 留出 navbar 空間 */
-            color: var(--text-main); z-index: 100;
-            box-shadow: inset -5px 0 15px rgba(0,0,0,0.2); 
-            border-right: 1px solid rgba(137, 180, 250, 0.2);
+            padding: 30px 20px; color: white; z-index: 100;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5); border-right: 3px solid var(--primary);
             overflow-y: auto;
         }
+        .ui-tag { background: #444; padding: 5px 12px; border-radius: 4px; font-size: 11px; margin-bottom: 20px; display: inline-block; color: var(--accent); border: 1px solid #666; font-weight: bold; }
+        .record-box { background: rgba(255, 215, 0, 0.15); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 2px solid var(--record); text-align: center; }
+        .record-val { font-size: 32px; font-weight: 900; color: var(--record); font-family: 'Courier New', monospace; }
         
-        /* 自定義滾動條 */
-        #left-panel::-webkit-scrollbar { width: 6px; }
-        #left-panel::-webkit-scrollbar-track { background: var(--bg-main); }
-        #left-panel::-webkit-scrollbar-thumb { background: #3b4261; border-radius: 3px; }
-        #left-panel::-webkit-scrollbar-thumb:hover { background: var(--primary); }
-
-        .ui-tag { 
-            background: rgba(137, 180, 250, 0.05); 
-            padding: 8px 12px; 
-            border-radius: 4px; 
-            font-size: 11px; 
-            margin-bottom: 20px; 
-            display: inline-block; 
-            color: var(--primary); 
-            border-left: 3px solid var(--primary); 
-            border-bottom: 1px solid rgba(137, 180, 250, 0.2);
-            font-family: 'Orbitron', sans-serif;
-            letter-spacing: 1px;
-        }
-
-        .record-box { 
-            background: rgba(166, 227, 161, 0.05); 
-            padding: 15px; 
-            border-radius: 6px; 
-            margin-bottom: 20px; 
-            border: 1px solid rgba(166, 227, 161, 0.3); 
-            text-align: center; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        .record-label { color: #a6adc8; font-size: 12px; display: block; margin-bottom: 5px; text-transform: uppercase; }
-        .record-val { font-size: 32px; font-weight: 700; color: var(--record); font-family: 'Orbitron', sans-serif; text-shadow: 0 0 10px rgba(166, 227, 161, 0.4); }
-
-        button { 
-            background: transparent; 
-            border: 1px solid var(--primary); 
-            padding: 12px; 
-            border-radius: 4px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            width: 100%; 
-            margin-bottom: 12px; 
-            transition: 0.3s; 
-            color: var(--primary); 
-            text-transform: uppercase; 
-            font-family: 'Share Tech Mono', monospace;
-            box-shadow: 0 0 5px rgba(137, 180, 250, 0.1);
-        }
-        button:hover { 
-            background: rgba(137, 180, 250, 0.15); 
-            box-shadow: 0 0 10px rgba(137, 180, 250, 0.4); 
-            color: #cdd6f4;
-        }
-
-        .btn-start { 
-            border-color: var(--accent); 
-            color: var(--accent); 
-            font-size: 1.1em; 
-            letter-spacing: 1px; 
-            box-shadow: 0 0 8px rgba(187, 154, 247, 0.2); 
-        }
-        .btn-start:hover {
-            background: rgba(187, 154, 247, 0.15); 
-            box-shadow: 0 0 15px rgba(187, 154, 247, 0.5); 
-            color: #e0d4fc;
-        }
+        button { background: #5d4037; border: none; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 12px; transition: 0.3s; color: white; text-transform: uppercase; }
+        button:hover { background: #fff; color: #000; transform: scale(1.02); }
+        .btn-start { background: var(--primary); font-size: 1.1em; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(211, 47, 47, 0.4); }
         
-        .btn-toggle { font-size: 12px; }
-        .btn-toggle.off { border-color: #45475a; color: #6c7086; box-shadow: none; }
+        .btn-toggle { background: #2980b9; color: white; font-size: 12px; }
+        .btn-toggle.off { background: #7f8c8d; }
 
-        .info-row { margin-bottom: 12px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; color: #bac2de;}
-        .data { color: var(--primary); font-family: 'Orbitron', monospace; font-weight: bold; text-shadow: 0 0 5px rgba(137, 180, 250, 0.4); }
-        
-        input[type="range"] { 
-            width: 100%; 
-            cursor: pointer; 
-            accent-color: var(--accent); 
-            margin-bottom: 15px; 
-            background: #11111b;
-            height: 4px;
-            outline: none;
-            -webkit-appearance: none;
-            border-radius: 2px;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 15px; height: 15px;
-            background: var(--accent);
-            box-shadow: 0 0 8px var(--accent);
-            border-radius: 50%;
-        }
-
-        .legend { font-size: 12px; padding: 10px; background: rgba(17, 17, 27, 0.6); border: 1px solid #313244; border-radius: 4px; }
-        hr { border: 0; border-top: 1px dashed rgba(137, 180, 250, 0.2); margin: 20px 0; }
-        
-        #bubble { 
-            position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); 
-            background: rgba(20, 23, 30, 0.95); padding: 15px 40px; border-radius: 6px; 
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); font-size: 18px; font-weight: bold; 
-            display: none; z-index: 200; border: 1px solid var(--record); color: var(--record); 
-            font-family: 'Orbitron', sans-serif; letter-spacing: 1px; text-shadow: 0 0 5px var(--record);
-        }
+        .info-row { margin-bottom: 12px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .data { color: #00ffd2; font-family: 'Courier New', monospace; font-weight: bold; }
+        input[type="range"] { width: 100%; cursor: pointer; accent-color: var(--primary); margin-bottom: 10px; }
+        .legend { font-size: 12px; padding: 10px; background: rgba(0,0,0,0.4); border-radius: 8px; }
+        hr { border: 0; border-top: 1px solid #444; margin: 20px 0; }
+        #bubble { position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); background: white; padding: 15px 40px; border-radius: 50px; box-shadow: 0 15px 50px rgba(0,0,0,0.4); font-size: 18px; font-weight: bold; display: none; z-index: 200; border: 4px solid var(--primary); color: #333; }
     </style>
 </head>
 <body>
 
-<div class="navbar">
-  <div style="padding: 14px 20px; font-family: 'Orbitron'; color: var(--accent); font-weight: bold; text-shadow: 0 0 8px rgba(187, 154, 247, 0.5); letter-spacing: 1px;">SYS_CORE</div>
-  <a href="#" onclick="location.href='index.html'">[ 系統首頁 ]</a>
+<!-- 導覽列 -->
+<div class="navbar" id="navbar">
+  <a href="#" onclick="location.href='index.html'">首頁</a>
   <div class="dropdown">
-    <button class="dropbtn">資料庫模組 ▼</button>
+    <button class="dropbtn">數學資料庫 ▼</button>
     <div class="dropdown-content">
       <a href="#" onclick="location.href='1-sct-homepage.html'">> 三角函數</a>
-      <a href="#" onclick="location.href='1-lf-homepage.html'">> 線性函數</a>
-      <a href="#" onclick="location.href='game-homepage.html'">> 軌道物理演算</a>
+      <a href="#" onclick="location.href='1-lf-homepage.html'">> 函數系統</a>
+      <a href="#" onclick="location.href='game-homepage.html'">> 鐵道系統</a>
     </div>
   </div>
 </div>
 
-<div id="left-panel">
-    <div class="ui-tag">PHYSICS_ENGINE v17.0 | CYBER_RAIL_PROTOCOL</div>
-    
-    <div class="record-box">
-        <span class="record-label">[ MAX_VELOCITY_LOCK ]</span>
-        <span id="initial-speed-lock" class="record-val">0</span> <small style="color:var(--record); font-family:'Share Tech Mono';">KM/H</small>
+    <div id="left-panel">
+        <div class="ui-tag">PHYSICS PARK v17.0 | JANFUSUN G5 STYLE</div>
+        <div class="record-box">
+            <span class="record-label">⭐ 鎖定最高初速度</span>
+            <span id="initial-speed-lock" class="record-val">0</span> <small style="color:var(--record)">KM/H</small>
+        </div>
+        
+        <div class="info-row"><span>軌道爬升坡度：</span><span id="v-deg" class="data">45</span>°</div>
+        <input type="range" min="15" max="85" value="45" id="degSlider">
+
+        <button id="arrowToggleBtn" class="btn-toggle">👁️ 顯示向量箭頭：ON</button>
+
+        <div class="legend" id="arrowLegend">
+            <div style="color:#ff4757">● 紅色：下滑推力 (sin分力)</div>
+            <div style="color:#38bdf8">● 藍色：軌道壓力 (cos分力)</div>
+        </div>
+        <br>
+        
+        <button class="btn-start" id="startBtn">🚀 鳴笛啟動測試</button>
+        <button id="viewBtn">🎥 切換視角 (V)</button>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button id="addCar" style="background:#444; font-size:11px; width:50%">車廂 +</button>
+            <button id="removeCar" style="background:#444; font-size:11px; width:50%">車廂 -</button>
+        </div>
+        <hr>
+        <div class="info-row"><span>狀態：</span><span id="status-text" class="data">準備就緒</span></div>
+        <div class="info-row"><span>時速：</span><span id="speed-val" class="data">0</span> km/h</div>
     </div>
-    
-    <div class="info-row"><span>軌道爬升傾角：</span><span id="v-deg" class="data">45</span><span style="color:var(--primary)">°</span></div>
-    <input type="range" min="15" max="85" value="45" id="degSlider">
+    <div id="bubble"></div>
 
-    <button id="arrowToggleBtn" class="btn-toggle">[ 向量力學可視化: ON ]</button>
-
-    <div class="legend" id="arrowLegend">
-        <div style="color:var(--force-sin); text-shadow:0 0 5px rgba(243, 139, 168, 0.4);">> 柔粉色：下滑分力 (sin)</div>
-        <div style="color:var(--force-cos); text-shadow:0 0 5px rgba(137, 180, 250, 0.4);">> 天際藍：正向壓力 (cos)</div>
-    </div>
-    <br>
-    
-    <button class="btn-start" id="startBtn">啟動::動能測試協議</button>
-    <button id="viewBtn">切換視角 [ V ]</button>
-    
-    <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <button id="addCar" style="font-size:11px; width:50%">掛載模塊 +</button>
-        <button id="removeCar" style="font-size:11px; width:50%">卸載模塊 -</button>
-    </div>
-    <hr>
-    <div class="info-row"><span>系統狀態：</span><span id="status-text" class="data" style="color:var(--accent)">STANDBY</span></div>
-    <div class="info-row"><span>即時速報：</span><span id="speed-val" class="data">0</span> km/h</div>
-</div>
-
-<div id="bubble"></div>
-
-<script type="importmap"> { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } } </script>
+    <script type="importmap"> { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } } </script>
 
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x1e222a); // 護眼深藍灰背景
-scene.fog = new THREE.Fog(0x1e222a, 3000, 15000);
+scene.background = new THREE.Color(0xfba58c);
+scene.fog = new THREE.Fog(0xfba58c, 3000, 15000);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -284,36 +165,34 @@ cameraTPV.position.set(2500, 1800, 2500);
 const cameraFPV = new THREE.PerspectiveCamera(80, window.innerWidth/window.innerHeight, 0.1, 10000);
 const controls = new OrbitControls(cameraTPV, renderer.domElement);
 
-// 冷色系科技光源 (柔化)
-scene.add(new THREE.AmbientLight(0x2a2e3a, 1.5), new THREE.DirectionalLight(0x89b4fa, 1.0));
+scene.add(new THREE.AmbientLight(0xffffff, 0.7), new THREE.DirectionalLight(0xffffff, 1.5));
 
-// 虛擬地表與發光網格
-const groundMat = new THREE.MeshStandardMaterial({color: 0x14171c, roughness: 0.1, metalness: 0.8});
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(20000, 20000), groundMat);
+// 地面
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(20000, 20000), new THREE.MeshStandardMaterial({color: 0x34495e}));
 ground.rotation.x = -Math.PI/2; ground.receiveShadow = true;
 scene.add(ground);
 
-const gridHelper = new THREE.GridHelper(20000, 200, 0x89b4fa, 0x2a2e3a);
-gridHelper.position.y = 5;
+// ===== 新增：地上網格 (GridHelper) =====
+// 參數代表：(總尺寸, 格數, 中心線顏色, 網格線顏色)
+const gridHelper = new THREE.GridHelper(20000, 200, 0xffa726, 0x4a6572);
+gridHelper.position.y = 5; // 微抬高 5 單位，避免網格與地面發生閃爍 (Z-fighting)
 scene.add(gridHelper);
 
-// 摩天輪 (科技光環版 - 顏色適配)
+// 摩天輪
 const ferris = new THREE.Group();
-const ringMat = new THREE.MeshStandardMaterial({color: 0x000000, emissive: 0x89b4fa, emissiveIntensity: 0.3, wireframe: true});
-ferris.add(new THREE.Mesh(new THREE.TorusGeometry(400, 8, 16, 100), ringMat));
+ferris.add(new THREE.Mesh(new THREE.TorusGeometry(400, 8, 16, 100), new THREE.MeshStandardMaterial({color: 0xf1c40f})));
 for(let i=0; i<12; i++) {
-    const podMat = new THREE.MeshStandardMaterial({color: 0x11111b, emissive: 0xbb9af7, emissiveIntensity: 0.5});
-    const pod = new THREE.Mesh(new THREE.BoxGeometry(60,80,50), podMat);
+    const pod = new THREE.Mesh(new THREE.BoxGeometry(60,80,50), new THREE.MeshStandardMaterial({color: 0xe74c3c}));
     pod.position.set(Math.cos(i/12*Math.PI*2)*400, Math.sin(i/12*Math.PI*2)*400, 0);
     ferris.add(pod);
 }
 ferris.position.set(-2000, 600, -1500);
 scene.add(ferris);
 
-// 物理向量 (護眼科幻色系)
+// 物理向量
 let showArrows = true;
-const arrowF = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), 1, 0xf38ba8, 40, 20); // 柔和粉紅
-const arrowN = new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), 1, 0x89b4fa, 40, 20); // 天際藍
+const arrowF = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), 1, 0xff4757, 40, 20);
+const arrowN = new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), 1, 0x38bdf8, 40, 20);
 scene.add(arrowF, arrowN);
 
 let curve, frames, trackGroup = new THREE.Group();
@@ -337,10 +216,8 @@ function buildTracks() {
     curve = new THREE.CatmullRomCurve3(pts, true, 'centripetal');
     frames = curve.computeFrenetFrames(numSamples, true);
 
-    // 科技材質軌道
-    const railMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 1, roughness: 0.2, emissive: 0x1e222a });
-    const woodMat = new THREE.MeshStandardMaterial({ color: 0x181825, metalness: 0.8 }); // 黑暗枕木
-    const pillarMat = new THREE.MeshBasicMaterial({ color: 0x89b4fa, wireframe: true, transparent: true, opacity: 0.1 });
+    const railMat = new THREE.MeshStandardMaterial({ color: 0x333, metalness: 0.9 });
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x5d4037 }); // 枕木材質
 
     // 雙軌鐵道
     for(let offset of [24, -24]) {
@@ -355,15 +232,15 @@ function buildTracks() {
         const idx = i;
         
         // 放置枕木 (Ties)
-        const tie = new THREE.Mesh(new THREE.BoxGeometry(80, 4, 12), woodMat);
+        const tie = new THREE.Mesh(new THREE.BoxGeometry(80, 6, 15), woodMat);
         tie.position.copy(p);
         tie.setRotationFromMatrix(new THREE.Matrix4().makeBasis(frames.binormals[idx], frames.normals[idx], frames.tangents[idx]));
         tie.translateY(-5);
         trackGroup.add(tie);
 
-        // 放置虛擬線框支柱 (Pillars)
+        // 放置垂直強化支柱 (Pillars) - 每隔一段距離放一根
         if (i % 90 === 0) {
-            const pillar = new THREE.Mesh(new THREE.CylinderGeometry(15, 15, p.y, 4), pillarMat);
+            const pillar = new THREE.Mesh(new THREE.CylinderGeometry(10, 20, p.y, 6), railMat);
             pillar.position.set(p.x, p.y/2, p.z);
             trackGroup.add(pillar);
         }
@@ -374,12 +251,7 @@ const train = [];
 let progress = 0, vel = 0, isRacing = false, isFPV = false, hasCaptured = false;
 
 function addCar() {
-    // 第一節車廂為薰衣草紫核心，其餘為天際藍從屬模塊
-    const carMat = train.length === 0 
-        ? new THREE.MeshStandardMaterial({ color: 0x313244, emissive: 0xbb9af7, emissiveIntensity: 0.6, metalness: 0.8 })
-        : new THREE.MeshStandardMaterial({ color: 0x313244, emissive: 0x89b4fa, emissiveIntensity: 0.4, metalness: 0.8 });
-        
-    const car = new THREE.Mesh(new THREE.BoxGeometry(60, 30, 85), carMat);
+    const car = new THREE.Mesh(new THREE.BoxGeometry(60, 40, 90), new THREE.MeshStandardMaterial({ color: train.length === 0 ? 0xd32f2f : 0x795548 }));
     scene.add(car); train.push(car); updateTrainPosition();
 }
 
@@ -390,12 +262,12 @@ function updateTrainPosition() {
         const idx = Math.floor(cp * numSamples);
         car.position.copy(p);
         car.setRotationFromMatrix(new THREE.Matrix4().makeBasis(frames.binormals[idx], frames.normals[idx], frames.tangents[idx]));
-        car.translateY(20); // 調整懸浮高度
+        car.translateY(25);
         
         if (i === 0) {
             cameraFPV.position.copy(car.position); 
             cameraFPV.setRotationFromMatrix(car.matrix);
-            cameraFPV.translateY(25); cameraFPV.translateZ(-30);
+            cameraFPV.translateY(20); cameraFPV.translateZ(-25);
             
             arrowF.visible = arrowN.visible = showArrows;
             if (showArrows) {
@@ -416,27 +288,19 @@ function animate() {
         const pos = curve.getPointAt(p);
         if (progress < 0.20) {
             vel = 0.00045;
-            document.getElementById('status-text').innerText = "CALCULATING_ASCENT...";
-            document.getElementById('status-text').style.color = "var(--primary)";
+            document.getElementById('status-text').innerText = "⚙️ 爬升中...";
         } else {
             let g = (2500 - pos.y) * 0.0000035;
             vel = THREE.MathUtils.lerp(vel, 0.001 + Math.max(0, g), 0.05);
-            document.getElementById('status-text').innerText = "GRAVITY_OVERRIDE_ACTIVE";
-            document.getElementById('status-text').style.color = "var(--accent)";
-            
             if (!hasCaptured) {
                 document.getElementById('initial-speed-lock').innerText = (vel * 380000).toFixed(0);
                 hasCaptured = true;
-                const b = document.getElementById('bubble'); b.innerText = "DATA_CAPTURED :: 初速鎖定";
+                const b = document.getElementById('bubble'); b.innerText = "📸 初速度紀錄完成！";
                 b.style.display = 'block'; setTimeout(() => b.style.display = 'none', 1500);
             }
         }
         progress += vel;
-        if (progress >= 0.995) { 
-            isRacing = false; progress = 0; 
-            document.getElementById('status-text').innerText = "STANDBY";
-            document.getElementById('status-text').style.color = "var(--primary)";
-        }
+        if (progress >= 0.995) { isRacing = false; progress = 0; }
         document.getElementById('speed-val').innerText = (vel * 380000).toFixed(0);
         updateTrainPosition();
     }
@@ -446,7 +310,7 @@ function animate() {
 
 document.getElementById('arrowToggleBtn').onclick = function() {
     showArrows = !showArrows;
-    this.innerText = `[ 向量力學可視化: ${showArrows ? 'ON' : 'OFF'} ]`;
+    this.innerText = `👁️ 顯示向量箭頭：${showArrows ? 'ON' : 'OFF'}`;
     this.classList.toggle('off', !showArrows);
     document.getElementById('arrowLegend').style.opacity = showArrows ? '1' : '0.3';
     updateTrainPosition();
@@ -464,7 +328,7 @@ document.getElementById('degSlider').oninput = (e) => {
     updateTrainPosition();
 };
 
-buildTracks(); for(let i=0; i<4; i++) addCar(); animate();
+buildTracks(); for(let i=0; i<6; i++) addCar(); animate();
 </script>
 </body>
 </html>

@@ -149,8 +149,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x1e222a);
-scene.fog = new THREE.FogExp2(0x1e222a, 0.0002);
+scene.background = new THREE.Color(0xfba58c);
+scene.fog = new THREE.Fog(0xfba58c, 3000, 15000);
 
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setSize(window.innerWidth, window.innerHeight);

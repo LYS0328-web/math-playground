@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>高職數學 C - 一次函數 (Linear Functions)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+body { 
+  margin: 0; 
+  font-family: 'Share Tech Mono', 'Segoe UI', sans-serif; 
+  background: #1e222a; 
+  color: #bac2de; 
+  font-size: 18px;
+  overflow-x: hidden;
+}
+
+/* 導覽列 */
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: rgba(30, 34, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(137, 180, 250, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  height: 50px;
+  line-height: 50px;
+}
+.navbar a { 
+  float: left; 
+  color: #89b4fa; 
+  padding: 0 20px; 
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 5px rgba(137, 180, 250, 0.3);
+  transition: 0.3s;
+}
+.navbar a:hover { 
+  background: rgba(137, 180, 250, 0.1); 
+  color: #cdd6f4;
+}
+.dropdown { float: left; }
+.dropbtn { 
+  background: none; border: none; color: #89b4fa; padding: 0 20px; cursor: pointer; 
+  font-size: 16px; line-height: 50px; font-family: 'Share Tech Mono', monospace;
+  text-shadow: 0 0 5px rgba(137, 180, 250, 0.3);
+}
+.dropdown-content {
+  display: none; position: absolute; background: rgba(20, 23, 30, 0.95);
+  border: 1px solid rgba(137, 180, 250, 0.2);
+  min-width: 180px; border-radius: 0 0 8px 8px; overflow: hidden;
+}
+.dropdown-content a { display: block; padding: 12px 20px; color: #7dcfff; }
+.dropdown-content a:hover { background: rgba(125, 207, 255, 0.15); color: #ffffff; }
+.dropdown:hover .dropdown-content { display: block; }
+
+/* 3D 模擬主視窗 */
+#track-container { 
+  width: 100%; height: 55vh; margin-top: 50px; 
+  border-bottom: 2px solid rgba(125, 207, 255, 0.4); 
+  background: #111318;
+  position: relative;
+}
+
+/* 頂部 HUD 狀態面板 */
+#hud-display {
+  position: absolute; top: 20px; right: 20px; background: rgba(20, 23, 30, 0.9); 
+  border: 1px solid #7dcfff; padding: 12px 20px; border-radius: 6px; font-family: 'Orbitron', sans-serif; z-index: 500;
+  box-shadow: 0 0 15px rgba(125, 207, 255, 0.2);
+}
+
+/* 核心內容區 */
+#lesson { 
+  padding: 30px 20px; 
+  max-width: 1300px; 
+  margin: 0 auto; 
+}
+
+h1, h2, h3 { 
+  color: #89b4fa; 
+  font-family: 'Orbitron', sans-serif;
+  text-shadow: 0 0 8px rgba(137, 180, 250, 0.3); 
+}
+h1 { border-left: 4px solid #00ffff; padding-left: 12px; margin-top: 35px; color: #cdd6f4; font-size: 26px;}
+
+ul { padding-left: 20px; color: #a6adc8; }
+li { margin-bottom: 10px; line-height: 1.6; }
+
+/* 排版與卡片 */
+.lesson-row {
+  display: flex;
+  gap: 25px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.panel-main { flex: 2 1 600px; }
+.panel-side { flex: 1 1 350px; }
+
+.data-card {
+  background: rgba(30, 34, 42, 0.6);
+  border: 1px solid rgba(137, 180, 250, 0.15);
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* 控制台與高亮 */
+.control-console {
+  background: rgba(20, 23, 30, 0.85);
+  border-left: 4px solid #00ffff;
+  padding: 20px;
+  border-radius: 6px;
+  margin-top: 15px;
+}
+
+input[type=range] {
+  width: 100%; accent-color: #00ffff; cursor: pointer; margin: 12px 0;
+}
+.value-highlight { color: #00ffff; font-weight: bold; text-shadow: 0 0 8px rgba(0, 255, 255, 0.4); }
+.angle-display { font-family: 'Orbitron', sans-serif; font-size: 18px; color: #bb9af7; }
+
+/* SVG 樣式 */
+svg { 
+  background: rgba(20, 23, 30, 0.5);
+  border: 1px solid rgba(137, 180, 250, 0.15);
+  border-radius: 8px;
+}
+
+.func-graph {
+  background: rgba(20, 23, 30, 0.6);
+  border: 1px solid rgba(125, 207, 255, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+/* ==========================================================================
+   【最下方遊戲島嶼區 - 補給線定位師】
+   ========================================================================== */
+#game-island-section {
+  min-height: 100vh; background: radial-gradient(circle at center, #1a1d24 0%, #0f1115 100%);
+  border-top: 3px dashed rgba(0, 255, 255, 0.3); padding: 60px 20px; box-sizing: border-box;
+}
+.island-map-title { text-align: center; margin-bottom: 50px; }
+.island-map-title h2 { font-size: 32px; color: #cdd6f4; }
+
+.island-container { display: flex; justify-content: center; align-items: center; gap: 40px; max-width: 1200px; margin: 0 auto; flex-wrap: wrap; }
+.island-card {
+  background: rgba(30, 34, 42, 0.85); border: 2px solid rgba(137, 180, 250, 0.2); border-radius: 16px;
+  width: 320px; padding: 35px 25px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.4); transition: 0.4s;
+}
+#island-1 { transform: translateY(-20px); }
+#island-2 { transform: translateY(30px); }
+#island-3 { transform: translateY(-10px); }
+
+.island-card.active { border-color: #7dcfff; box-shadow: 0 0 20px rgba(125, 207, 255, 0.2); }
+.island-card.current-stay { border-color: #00ffff; box-shadow: 0 0 30px rgba(0, 255, 255, 0.5); transform: scale(1.05) !important; }
+.island-card.locked { opacity: 0.25; cursor: not-allowed; transform: translateY(0) !important; }
+
+.island-icon { font-size: 50px; display: inline-block; margin-bottom: 15px; }
+.btn-enter-mission {
+  margin-top: 20px; padding: 12px 28px; background: transparent; border: 1px solid #7dcfff; color: #7dcfff; 
+  font-family: 'Orbitron'; border-radius: 4px; cursor: pointer; transition: 0.3s; width: 100%;
+}
+.island-card.active .btn-enter-mission:hover { background: #7dcfff; color: #1e222a; font-weight: bold; }
+.island-card.current-stay .btn-enter-mission { border-color: #00ffff; color: #00ffff; }
+
+/* 遊戲彈窗 */
+.game-modal {
+  display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 95%; max-width: 600px; background: rgba(20, 23, 30, 0.98); border: 2px solid #00ffff;
+  border-radius: 12px; padding: 25px; z-index: 2000; box-shadow: 0 0 50px rgba(0,255,255,0.3);
+}
+.modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.78); z-index:1999; backdrop-filter: blur(5px); }
+.btn-action { background: #00ffff; color: #1e222a; font-family: 'Orbitron'; font-weight: bold; border: none; padding: 12px 30px; cursor: pointer; margin-top: 15px; border-radius: 4px; width: 100%; font-size: 16px; }
+.btn-close { background: transparent; color: #aaa; border: 1px solid #444; padding: 8px 15px; margin-top: 10px; cursor: pointer; border-radius: 4px; width: 100%; }
+
+.input-group {
+  margin: 10px 0; text-align: left;
+}
+.input-group label {
+  display: block; font-size: 14px; color: #89b4fa; margin-bottom: 5px;
+}
+.input-field {
+  width: 100%; padding: 10px; background: rgba(0,0,0,0.4); border: 1px solid #7dcfff; color: #00ffff; font-family: 'Orbitron', monospace; font-size: 16px; border-radius: 4px;
+}
+</style>
+</head>
+<body>
+
+<div class="navbar">
+  <a href="#" onclick="location.href='index.html'"> 首頁 </a>
+  <div class="dropdown">
+    <button class="dropbtn">數學資料庫 ▼</button>
+    <div class="dropdown-content">
+    <a href="#" onclick="location.href='1-sct-homepage.html'">> 三角函數</a>
+    <a href="#" onclick="location.href='1-lf-homepage.html'">> 線性函數</a>
+    <a href="#" onclick="location.href='game-homepage.html'">> 鐵道系統</a>
+    </div>
+  </div>
+</div>
+
+<!-- 頂部 3D 雲霄飛車模擬器 -->
+<div id="track-container">
+  <div id="hud-display">
+    <div style="font-size: 11px; color: #bb9af7; letter-spacing: 2px; font-weight: bold;">LINEAR VECTOR CORE</div>
+    <div style="font-size: 16px; margin: 5px 0; color: #fff;">LOCATION: <span id="hud-loc" style="color: #00ffff;">STATION 01</span></div>
+    <div style="font-size: 13px; color: #7dcfff;">TRACK SLOPE: <span id="hud-slope" style="color:#a6e3a1;">m = +1.00</span></div>
+  </div>
+</div>
+
+<!-- 核心教學區 -->
+<div id="lesson">
+
+  <!-- 01_ 觀念建立：斜率與傾角 -->
+  <div class="lesson-row">
+    <div class="panel-main">
+      <div class="data-card">
+        <h1>01_ 核心概念：斜率與傾角 (m = tanθ)</h1>
+        <p>在一維與二維坐標系中，**一次函數（Linear Function）** 的圖形是一條直線。而直線最核心的特徵就是**「陡峭程度」**，也就是數學上的**斜率（Slope, $m$）**。</p>
+        <ul>
+          <li><strong class="value-highlight">斜率定義：</strong>$m = rac{\Delta y}{\Delta x} = rac{y_2 - y_1}{x_2 - x_1}$ （垂直改變量 / 水平改變量）。</li>
+          <li><strong class="value-highlight">連結三角函數：</strong>若直線與 $x$ 軸正向的夾角為 $	heta$（傾角），則 <span style="color:#00ffff; font-size:20px; font-weight:bold;">$m = 	an	heta$</span>！</li>
+          <li><strong class="value-highlight">幾何意義：</strong>
+            $	heta < 90^\circ \Rightarrow m > 0$（爬升坡）；
+            $	heta = 0^\circ \Rightarrow m = 0$（水平平穩段）；
+            $	heta > 90^\circ \Rightarrow m < 0$（俯衝急降坡）。
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="panel-side">
+      <div class="data-card" style="text-align: center;">
+        <h3>幾何動態傾角感測器</h3>
+        <svg width="100%" height="220" viewBox="0 0 350 200">
+          <line x1="30" y1="160" x2="320" y2="160" stroke="#3b4261" stroke-width="2"/>
+          <line x1="60" y1="30" x2="60" y2="180" stroke="#3b4261" stroke-width="2"/>
+          <line id="dynLine" x1="60" y1="160" x2="280" y2="60" stroke="#00ffff" stroke-width="4"/>
+          <circle cx="60" cy="160" r="5" fill="#00ffff"/>
+          <text id="svgSlopeText" x="140" y="50" fill="#a6e3a1" font-weight="bold" font-family="Orbitron">m = tan(24.4°) = 0.45</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02_ 動態調校控制台 -->
+  <h1>02_ 互動實驗：調校軌道斜率 m 與 截距 k</h1>
+  <div class="lesson-row">
+    <div class="panel-main">
+      <div class="data-card">
+        <h3>一次函數斜截式控制台：$y = mx + k$</h3>
+        <p style="color:#a6adc8; margin: 0;">拖曳下方滑桿，觀察直線在直角坐標系上的傾斜程度與上下平移變化：</p>
+        
+        <div class="control-console">
+          <div class="angle-display">斜率 m = <span id="mValueDisplay" class="value-highlight">1.00</span> | 傾角 θ = <span id="thetaDisplay" style="color:#a6e3a1;">45.0</span>°</div>
+          <input type="range" id="mSlider" min="-3" max="3" step="0.1" value="1">
+
+          <div class="angle-display" style="margin-top:15px;">y 截距 k = <span id="kValueDisplay" class="value-highlight">0.00</span> (起始高度)</div>
+          <input type="range" id="kSlider" min="-50" max="50" step="5" value="0">
+
+          <p style="margin: 15px 0 0 0; line-height: 1.8; font-family: monospace; font-size: 18px;">
+            &gt; 直線方程式：<span id="equationDisplay" style="color:#00ffff; font-weight:bold;">y = 1.00x + 0.00</span><br>
+            &gt; 點斜式轉換：過點 (0, <span id="pointDisplay">0</span>)，斜率 m = <span id="mDisplay">1.00</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-side">
+      <div class="data-card" style="text-align: center;">
+        <h3>2D 坐標系即時連動</h3>
+        <svg id="interactiveGraph" width="100%" height="240" viewBox="0 0 300 240">
+          <line x1="20" y1="120" x2="280" y2="120" stroke="#3b4261" stroke-width="1.5"/>
+          <line x1="150" y1="20" x2="150" y2="220" stroke="#3b4261" stroke-width="1.5"/>
+          <line id="interactiveLine" x1="50" y1="220" x2="250" y2="20" stroke="#00ffff" stroke-width="3"/>
+          <circle id="interceptPoint" cx="150" cy="120" r="5" fill="#bb9af7"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- 03_ 高職數學 C 必考三型態與分段函數 -->
+  <h1>03_ 統測重點：直線三型態與分段軌道</h1>
+  <div class="lesson-row">
+    <div class="panel-main">
+      <div class="data-card">
+        <h3>高職數學 C 必考方程式型態對照表</h3>
+        <ul>
+          <li><p><strong class="value-highlight">點斜式：$y - y_1 = m(x - x_1)$</strong><br>最適合用在雲霄飛車鋪設！已知軌道銜接點 $(x_1, y_1)$ 與爬升斜率 $m$，直接導出整段直線方程式。</p></li>
+          <li><p><strong class="value-highlight">斜截式：$y = mx + k$</strong><br>直接指出斜率 $m$ 與 $y$ 軸交點 $(0, k)$（雲霄飛車起跑初始高度）。</p></li>
+          <li><p><strong class="value-highlight">一般式：$Ax + By + C = 0$</strong><br>統測最常出現的選擇題型態，斜率為 <span style="color:#bb9af7;">$m = -rac{A}{B}$</span>（注意負號！）。</p></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="panel-side">
+      <div class="data-card">
+        <h3>分段函數（Piecewise Function）</h3>
+        <p style="font-size:15px; color:#a6adc8;">
+          雲霄飛車軌道並非無限延伸，而是由多段「限定範圍」的直線組成。例如：
+        </p>
+        <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:6px; font-family:monospace; color:#00ffff; font-size:15px;">
+          f(x) = <br>
+          &nbsp;&nbsp;1.5x + 10 , (0 ≤ x < 40) [爬升]<br>
+          &nbsp;&nbsp;70 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, (40 ≤ x < 60) [平穩]<br>
+          &nbsp;&nbsp;-2.0x + 190, (60 ≤ x ≤ 90) [俯衝]
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 下方遊戲島嶼區：補給線定位師 -->
+<section id="game-island-section">
+  <div class="island-map-title">
+    <h2>MISSION PROTOCOL : 【補給線定位師】實戰演練</h2>
+    <p style="color: #a6adc8; max-width:800px; margin:0 auto;">
+      運用剛剛學會的「斜率 $m = 	an	heta$」、「點斜式」與「分段函數」，為補給車鋪設精準的線性軌道，穿梭於三個據點島嶼！
+    </p>
+  </div>
+
+  <div class="island-container">
+    <div class="island-card active current-stay" id="island-1">
+      <span class="island-icon">📡</span>
+      <h3>關卡 01 . 前哨站連通</h3>
+      <p style="font-size: 14px; color: #a6adc8;">
+      給定起點 A(2, 3) 與補給點 B(6, 11)<br>
+      請計算<span style="color:#00ffff; font-weight:bold;">正確斜率 m</span> 並鋪設直線軌道。
+      </p>
+      <button class="btn-enter-mission" id="btn-island-1" onclick="openMission(1)">開啟軌道鎖</button>
+    </div>
+
+    <div class="island-card locked" id="island-2">
+      <span class="island-icon">⚡</span>
+      <h3>關卡 02 . 傾角發射台</h3>
+      <p style="font-size: 14px; color: #a6adc8;">
+      出發點 P(4, 5)，給定坡度傾角 θ = 45°<br>
+      請利用<span style="color:#89b4fa; font-weight:bold;">點斜式</span>計算目標方程式。
+      </p>
+      <button class="btn-enter-mission" id="btn-island-2" onclick="openMission(2)" disabled>密碼鎖定中</button>
+    </div>
+
+    <div class="island-card locked" id="island-3">
+      <span class="island-icon">🏔️</span>
+      <h3>關卡 03 . 分段峽谷接力</h3>
+      <p style="font-size: 14px; color: #a6adc8;">
+      峽谷地形障礙！需要連續設定兩段<br>
+      <span style="color:#a6e3a1; font-weight:bold;">分段線性函數</span> 避開岩石順利抵達。
+      </p>
+      <button class="btn-enter-mission" id="btn-island-3" onclick="openMission(3)" disabled>密碼鎖定中</button>
+    </div>
+  </div>
+</section>
+
+<!-- 遊戲 Modal 視窗 -->
+<div class="modal-overlay" id="modalOverlay"></div>
+<div class="game-modal" id="gameModal">
+  <h2 id="modalTitle">關卡任務控制台</h2>
+  <p id="modalDesc" style="font-size: 15px; color: #a6adc8; margin-bottom: 15px;"></p>
+  
+  <div style="text-align:center; margin: 15px 0;">
+    <svg id="modalGameCanvas" width="100%" height="200" viewBox="0 0 400 200" style="background:rgba(0,0,0,0.5); border:1px solid #00ffff;">
+      <line x1="20" y1="180" x2="380" y2="180" stroke="#3b4261"/>
+      <line x1="20" y1="20" x2="20" y2="180" stroke="#3b4261"/>
+      <line id="modalPreviewLine" x1="20" y1="180" x2="380" y2="180" stroke="#00ffff" stroke-width="3" stroke-dasharray="5,5"/>
+      <circle id="pointA" cx="60" cy="150" r="6" fill="#00ffff"/>
+      <text id="textA" x="70" y="155" fill="#00ffff" font-size="14">A(2,3)</text>
+      <circle id="pointB" cx="300" cy="50" r="6" fill="#bb9af7"/>
+      <text id="textB" x="310" y="55" fill="#bb9af7" font-size="14">B(6,11)</text>
+    </svg>
+  </div>
+
+  <div id="modalControls" class="control-console" style="background: rgba(0,0,0,0.3); padding:15px;">
+    <!-- 動態生成輸入欄位 -->
+  </div>
+
+  <button class="btn-action" id="modalActionBtn" onclick="verifyMissionSolution()">驗證算式並發射補給車</button>
+  <button class="btn-close" onclick="closeMission()">關閉</button>
+</div>
+
+<!-- Three.js 載入 -->
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// --- 全局 UI 與 DOM 元素 ---
+const mSlider = document.getElementById('mSlider');
+const kSlider = document.getElementById('kSlider');
+const mValueDisplay = document.getElementById('mValueDisplay');
+const kValueDisplay = document.getElementById('kValueDisplay');
+const thetaDisplay = document.getElementById('thetaDisplay');
+const equationDisplay = document.getElementById('equationDisplay');
+const pointDisplay = document.getElementById('pointDisplay');
+const mDisplay = document.getElementById('mDisplay');
+const interactiveLine = document.getElementById('interactiveLine');
+const interceptPoint = document.getElementById('interceptPoint');
+const hudSlope = document.getElementById('hud-slope');
+const hudLoc = document.getElementById('hud-loc');
+
+// --- 3D 雲霄飛車場景 (Three.js) ---
+const container = document.getElementById('track-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xfba58c);  //改變背景-夕陽粉
+scene.fog = new THREE.Fog(0xfba58c, 3000, 15000);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+container.appendChild(renderer.domElement);
+
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth/container.clientHeight, 1, 20000);
+camera.position.set(2500, 1500, 2200);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+
+scene.add(new THREE.AmbientLight(0xcdd6f4, 0.3));
+const dirLight = new THREE.DirectionalLight(0xffd1a4, 2.0); //夕陽暖光
+dirLight.position.set(1000, 2000, 1000);
+scene.add(dirLight);
+scene.add(new THREE.AmbientLight(0xffe4d6, 0.8)); // 暖色環境光
+
+const trainLight = new THREE.PointLight(0x00ffff, 400000, 1800);
+scene.add(trainLight);
+
+// 地面網格 -顏色修改
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(20000,20000), new THREE.MeshStandardMaterial({color:0x34495e, roughness:0.8}));
+ground.rotation.x = -Math.PI/2;
+scene.add(ground);
+const gridHelper = new THREE.GridHelper(20000, 100, 0x3b4261, 0x1a1d24);
+scene.add(gridHelper);
+
+// 3D 軌道生成
+let curve, frames;
+const trackGroup = new THREE.Group();
+scene.add(trackGroup);
+const numSamples = 2000;
+
+function buildDynamicLinearTrack(mVal) {
+  while(trackGroup.children.length > 0) {
+    trackGroup.remove(trackGroup.children[0]);
+  }
+
+  const pts = [];
+  const baseLen = 2000;
+  
+  for(let i=0; i<=100; i++){
+    const t = i/100; 
+    const a = t * Math.PI * 2;
+    const x = Math.sin(a) * 1800 + Math.sin(a*2)*200;
+    const z = Math.cos(a) * 1500;
+
+    // 前半段根據輸入斜率生成一次函數坡道 y = m*x + k
+    let y = (i <= 30) 
+      ? 150 + (t * 100) * mVal * 15
+      : Math.max(120, 150 + 30 * mVal * 15 - (t-0.3)*800);
+    
+    pts.push(new THREE.Vector3(x, Math.max(100, y), z));
+  }
+
+  curve = new THREE.CatmullRomCurve3(pts, true, 'centripetal');
+  frames = curve.computeFrenetFrames(numSamples, true);
+
+  //修改軌道顏色color，改動
+  const railMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.2, wireframe: false });
+  
+  // woodMat (枕木)：深褐色
+  const woodMat = new THREE.MeshStandardMaterial({
+    color: 0x5d4037,
+    roughness: 0.9
+  });
+
+  for (let offset of [24, -24]) {
+    const rPts = [];
+    for (let j=0; j<=numSamples; j++) {
+      rPts.push(curve.getPointAt(j/numSamples).add(frames.binormals[j].clone().multiplyScalar(offset)));
+    }
+    trackGroup.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rPts, true), numSamples, 6, 8, true), railMat));
+  }
+
+  for(let i=0; i<numSamples; i+=30){
+    const p = curve.getPointAt(i/numSamples);
+    if(i % 120 === 0){
+      const pillar = new THREE.Mesh(new THREE.CylinderGeometry(8, 16, p.y, 6), railMat);
+      pillar.position.set(p.x, p.y/2, p.z);
+      trackGroup.add(pillar);
+    }
+  }
+}
+
+// 列車製作
+const train = [];
+let progress = 0;
+
+//這裡改車廂顏色，看gemini
+function addCar(isFirst) {
+  const car = new THREE.Mesh(
+    new THREE.BoxGeometry(60, 40, 90), 
+    new THREE.MeshStandardMaterial({ color: 0x1e222a, emissive: isFirst ? 0xd32f2f : 0x795548, emissiveIntensity: isFirst ? 0.9 : 0.4, wireframe: true })
+  );
+  scene.add(car);
+  train.push(car);
+}
+
+for(let i=0; i<4; i++) addCar(i===0);
+
+function updateTrain() {
+  train.forEach((car, i) => {
+    const cp = (progress - i * 0.025 + 1) % 1;
+    const p = curve.getPointAt(cp);
+    const idx = Math.floor(cp * numSamples);
+
+    car.position.copy(p);
+    car.setRotationFromMatrix(new THREE.Matrix4().makeBasis(frames.binormals[idx], frames.normals[idx], frames.tangents[idx]));
+    car.translateY(25);
+
+    if (i === 0) trainLight.position.copy(car.position).y += 60;
+  });
+}
+
+// --- 2D 控制台與 SVG 圖形連動 ---
+function updateLinearFunction() {
+  const m = parseFloat(mSlider.value);
+  const k = parseFloat(kSlider.value);
+  
+  mValueDisplay.innerText = m >= 0 ? `+${m.toFixed(2)}` : m.toFixed(2);
+  kValueDisplay.innerText = k >= 0 ? `+${k.toFixed(1)}` : k.toFixed(1);
+  
+  // 計算傾角 theta = arctan(m)
+  const rad = Math.atan(m);
+  const deg = (rad * 180 / Math.PI).toFixed(1);
+  thetaDisplay.innerText = deg;
+
+  // 更新方程式顯示
+  const kSign = k >= 0 ? `+ ${k.toFixed(1)}` : `- ${Math.abs(k).toFixed(1)}`;
+  equationDisplay.innerText = `y = ${m.toFixed(2)}x ${kSign}`;
+  pointDisplay.innerText = k.toFixed(1);
+  mDisplay.innerText = m.toFixed(2);
+
+  // 更新 2D SVG 直線 (範圍映照)
+  // SVG center at (150, 120)
+  const x1 = 50, x2 = 250;
+  const y1 = 120 - (m * (x1 - 150) + k);
+  const y2 = 120 - (m * (x2 - 150) + k);
+
+  interactiveLine.setAttribute('x1', x1);
+  interactiveLine.setAttribute('y1', y1);
+  interactiveLine.setAttribute('x2', x2);
+  interactiveLine.setAttribute('y2', y2);
+
+  interceptPoint.setAttribute('cy', 120 - k);
+
+  // HUD 提示更新
+  hudSlope.innerText = `m = ${m >= 0 ? '+' : ''}${m.toFixed(2)} (θ=${deg}°)`;
+
+  // 重建 3D 軌道坡度
+  buildDynamicLinearTrack(m);
+}
+
+mSlider.addEventListener('input', updateLinearFunction);
+kSlider.addEventListener('input', updateLinearFunction);
+
+updateLinearFunction();
+
+// --- 遊戲邏輯控制 ---
+let currentActiveMission = 1;
+
+window.openMission = function(id) {
+  if(id !== currentActiveMission) return;
+  document.getElementById("modalOverlay").style.display = "block";
+  document.getElementById("gameModal").style.display = "block";
+
+  const controlsDiv = document.getElementById("modalControls");
+  controlsDiv.innerHTML = "";
+
+  if(id === 1) {
+    document.getElementById("modalTitle").innerText = "📡 關卡 01：計算連線斜率";
+    document.getElementById("modalDesc").innerText = "給定 A(2, 3) 與 B(6, 11)，請計算兩點之間的斜率 m = (y2 - y1) / (x2 - x1)。";
+    
+    controlsDiv.innerHTML = `
+      <div class="input-group">
+        <label>請輸入求出的斜率 m 數值：</label>
+        <input type="number" id="inputM" class="input-field" placeholder="例如：1.5" step="0.1">
+      </div>
+    `;
+    
+    // 設定預覽 SVG
+    document.getElementById("pointA").setAttribute("cx", "60");
+    document.getElementById("pointA").setAttribute("cy", "150");
+    document.getElementById("pointB").setAttribute("cx", "300");
+    document.getElementById("pointB").setAttribute("cy", "50");
+    document.getElementById("textA").innerText = "A(2, 3)";
+    document.getElementById("textB").innerText = "B(6, 11)";
+  } 
+  else if(id === 2) {
+    document.getElementById("modalTitle").innerText = "⚡ 關卡 02：點斜式軌道生成";
+    document.getElementById("modalDesc").innerText = "出發點 P(4, 5)，已知前方傾角 θ = 45° (故斜率 m = tan45° = 1)。請代入點斜式 y - 5 = 1(x - 4) 化簡為 y = mx + k，輸入截距 k 值。";
+    
+    controlsDiv.innerHTML = `
+      <div class="input-group">
+        <label>輸入化簡後的 y 截距 k 值 (y = 1.0x + k)：</label>
+        <input type="number" id="inputK" class="input-field" placeholder="例如：1">
+      </div>
+    `;
+
+    document.getElementById("textA").innerText = "P(4, 5)";
+    document.getElementById("textB").innerText = "目標發射區 (θ=45°)";
+  }
+  else if(id === 3) {
+    document.getElementById("modalTitle").innerText = "🏔️ 關卡 03：分段線性軌道銜接";
+    document.getElementById("modalDesc").innerText = "第一段軌道方程式為 y = 2x + 1 (0 ≤ x < 5)。為確保軌道連續不斷裂，第二段軌道在 x = 5 時高度必須一致！請算出一時當 x = 5 時的高度 y 值。";
+    
+    controlsDiv.innerHTML = `
+      <div class="input-group">
+        <label>輸入銜接點 x = 5 時的高度 y 值：</label>
+        <input type="number" id="inputY" class="input-field" placeholder="輸入算出的 y 值">
+      </div>
+    `;
+  }
+}
+
+window.closeMission = function() {
+  document.getElementById("modalOverlay").style.display = "none";
+  document.getElementById("gameModal").style.display = "none";
+}
+
+window.verifyMissionSolution = function() {
+  let passed = false;
+
+  if(currentActiveMission === 1) {
+    const val = parseFloat(document.getElementById("inputM").value);
+    // m = (11 - 3) / (6 - 2) = 8 / 4 = 2
+    passed = (val === 2);
+  } else if(currentActiveMission === 2) {
+    const val = parseFloat(document.getElementById("inputK").value);
+    // y - 5 = 1(x - 4) => y = x + 1 => k = 1
+    passed = (val === 1);
+  } else if(currentActiveMission === 3) {
+    const val = parseFloat(document.getElementById("inputY").value);
+    // y = 2(5) + 1 = 11
+    passed = (val === 11);
+  }
+
+  if(passed) {
+    alert("✨ 計算精準！線性軌道順利鋪設，補給車已發射通過！");
+    closeMission();
+    
+    currentActiveMission++;
+    hudLoc.innerText = `STATION 0${currentActiveMission <= 3 ? currentActiveMission : 3}`;
+
+    document.querySelectorAll(".island-card").forEach(card => card.classList.remove("active", "current-stay"));
+    
+    if (currentActiveMission <= 3) {
+      const nextCard = document.getElementById(`island-${currentActiveMission}`);
+      nextCard.classList.remove("locked");
+      nextCard.classList.add("active", "current-stay");
+      
+      const nextBtn = document.getElementById(`btn-island-${currentActiveMission}`);
+      nextBtn.removeAttribute("disabled");
+      nextBtn.innerText = "開啟軌道鎖";
+    } else {
+      alert("🏆 恭喜！您已成功運用一次函數與斜率全數通關【補給線定位師】！準備好挑戰最終雲霄飛車大挑戰了嗎？");
+    }
+  } else {
+    alert("❌ 算式或數值有誤，軌道無法順利接合！請再重新試算一次。");
+  }
+}
+
+// 動畫迴圈
+function animate() {
+  requestAnimationFrame(animate);
+  progress = (progress + 0.003) % 1;
+  updateTrain();
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+</script>
+
+</body>
+</html>

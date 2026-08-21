@@ -310,8 +310,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 // 場景與渲染器 (護眼深藍灰)
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x1e222a);
-scene.fog = new THREE.FogExp2(0x1e222a, 0.0002);
+scene.background = new THREE.Color(0xfba58c);
+scene.fog = new THREE.Fog(0xfba58c, 3000, 15000);
 
 const renderer = new THREE.WebGLRenderer({ antialias:true, logarithmicDepthBuffer:true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -328,9 +328,10 @@ controls.dampingFactor = 0.05;
 
 // 光源調暗，營造深邃感
 scene.add(new THREE.AmbientLight(0xcdd6f4, 0.15));
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.3);
+const dirLight = new THREE.DirectionalLight(0xffd1a4, 2.0);
 dirLight.position.set(1000, 2000, 1000);
 scene.add(dirLight);
+scene.add(new THREE.AmbientLight(0xffe4d6, 0.8)); // 暖色環境光
 
 // 列車動態光源
 const trainLight = new THREE.PointLight(0x7dcfff, 300000, 1500);
@@ -339,7 +340,7 @@ scene.add(trainLight);
 // 地面與全息網格 (莫蘭迪色調)
 const ground = new THREE.Mesh(
   new THREE.PlaneGeometry(20000,20000), 
-  new THREE.MeshStandardMaterial({color:0x111318, roughness: 0.8})
+  new THREE.MeshStandardMaterial({color:0x34495e, roughness: 0.8})
 );
 ground.rotation.x = -Math.PI/2;
 ground.receiveShadow = true;
@@ -394,7 +395,7 @@ function buildTracks(){
     frames = curve.computeFrenetFrames(numSamples,true);
     
     // 降低軌道亮度
-    const railMat = new THREE.MeshStandardMaterial({color:0x292e42, emissive:0x1a1d24, emissiveIntensity:0.1, roughness:0.4, metalness:0.8});
+    const railMat = new THREE.MeshStandardMaterial({color:0x222222, emissive:0x1a1d24, emissiveIntensity:0.1, roughness:0.4, metalness:0.8});
     const tieMat = new THREE.MeshStandardMaterial({color:0x292e42, emissive:0x3b4261, emissiveIntensity:0.3});
     
     for(let offset of [24,-24]){
@@ -431,19 +432,20 @@ let isTransitioning = false;
 let targetCameraPos = new THREE.Vector3(-1000, 800, -500); // 準備飛向摩天輪的位置
 let targetLookAt = new THREE.Vector3(-2000, 600, -1500);  // 視角對準摩天輪
 
-function addCar(){
-    const isFirstCar = train.length === 0;
-    const car = new THREE.Mesh(
-      new THREE.BoxGeometry(60,40,90), 
-      new THREE.MeshStandardMaterial({
-        color: 0x1e222a, 
-        emissive: isFirstCar ? 0x00ffff : 0x7dcfff,
-        emissiveIntensity: isFirstCar ? 0.8 : 0.3, 
-        wireframe: true 
-      })
-    );
-    scene.add(car);
-    train.push(car);
+// addCar 列車材質設定
+function addCar() {
+  const isFirst = train.length === 0;
+  const car = new THREE.Mesh(
+    new THREE.BoxGeometry(60, 40, 90), 
+    new THREE.MeshStandardMaterial({ 
+      color: isFirst ? 0xd32f2f : 0x795548, // 車頭復古鮮紅、車廂皮革棕
+      roughness: 0.4,
+      metalness: 0.1
+    })
+  );
+  scene.add(car);
+  train.push(car);
+  updateTrainPosition();
 }
 
 function updateTrainPosition(){

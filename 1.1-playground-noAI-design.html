@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>Math Coaster Sandbox - 數學雲霄飛車沙盒與 AI 助手</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;800&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Share Tech Mono', 'Segoe UI', monospace;
+  background: #1e222a;
+  color: #bac2de;
+  overflow: hidden;
+  height: 100vh;
+}
+
+header {
+  position: absolute;
+  top: 0; left: 0; width: 100%;
+  height: 50px;
+  background: rgba(30, 34, 42, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(137, 180, 250, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 1000;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.navbar-nav {
+  display: flex;
+  align-items: center;
+}
+
+.nav-link {
+  color: #89b4fa;
+  padding: 0 12px;
+  text-decoration: none;
+  font-size: 15px;
+  line-height: 50px;
+  transition: 0.3s;
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  background: rgba(137, 180, 250, 0.1);
+  color: #cdd6f4;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropbtn {
+  background: none;
+  border: none;
+  color: #89b4fa;
+  padding: 0 12px;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 50px;
+  font-family: 'Share Tech Mono', monospace;
+  transition: 0.3s;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background: rgba(20, 23, 30, 0.95);
+  border: 1px solid rgba(137, 180, 250, 0.2);
+  border-top: none;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  min-width: 150px;
+  backdrop-filter: blur(12px);
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+  top: 50px;
+  left: 0;
+  z-index: 1001;
+}
+
+.dropdown-content a {
+  display: block;
+  padding: 10px 15px;
+  color: #7dcfff;
+  text-decoration: none;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+.dropdown-content a:hover {
+  background: rgba(125, 207, 255, 0.15);
+  color: #ffffff;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.dropdown:hover .dropbtn {
+  background: rgba(137, 180, 250, 0.1);
+  color: #cdd6f4;
+}
+
+.logo {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #89b4fa;
+  text-shadow: 0 0 8px rgba(137, 180, 250, 0.3);
+  margin-left: 10px;
+}
+
+.status-bar {
+  display: flex;
+  gap: 20px;
+  font-size: 13px;
+}
+.status-item { color: #89b4fa; }
+.status-value { color: #a6e3a1; font-weight: bold; }
+
+.main-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  height: calc(100vh - 50px);
+  margin-top: 50px;
+}
+
+.panel {
+  background: rgba(20, 23, 30, 0.95);
+  border-right: 1px solid rgba(137, 180, 250, 0.2);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  overflow-y: auto;
+}
+
+.panel-header {
+  padding: 15px;
+  background: rgba(30, 34, 42, 0.85);
+  border-bottom: 1px solid rgba(137, 180, 250, 0.2);
+  font-family: 'Orbitron', sans-serif;
+  color: #89b4fa;
+  font-size: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-shadow: 0 0 8px rgba(137, 180, 250, 0.3);
+}
+
+.module-tabs {
+  display: flex;
+  background: rgba(20, 23, 30, 0.8);
+  border-bottom: 1px solid rgba(137, 180, 250, 0.15);
+}
+.tab-btn {
+  flex: 1;
+  padding: 10px 5px;
+  background: none;
+  border: none;
+  color: #7a84a6;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.tab-btn.active {
+  color: #00ffff;
+  border-bottom: 2px solid #00ffff;
+  background: rgba(0, 255, 255, 0.08);
+}
+
+.control-section {
+  padding: 15px;
+  display: none;
+}
+.control-section.active { display: block; }
+
+.form-group {
+  margin-bottom: 15px;
+}
+.form-group label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #bac2de;
+  margin-bottom: 5px;
+}
+.form-group input[type=range] {
+  width: 100%;
+  accent-color: #00ffff;
+  cursor: pointer;
+}
+.val-tag { color: #00ffff; font-weight: bold; text-shadow: 0 0 8px rgba(0, 255, 255, 0.4); }
+
+.btn-add-track {
+  width: 100%;
+  padding: 12px;
+  background: #00ffff;
+  color: #1e222a;
+  border: none;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: bold;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}
+.btn-add-track:hover {
+  background: #7dcfff;
+  box-shadow: 0 0 20px rgba(125, 207, 255, 0.6);
+}
+
+.btn-preset {
+  width: 100%;
+  padding: 12px;
+  background: #a6e3a1;
+  color: #1e222a;
+  border: none;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: bold;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 0 15px rgba(166, 227, 161, 0.3);
+}
+.btn-preset:hover {
+  background: #87d082;
+  box-shadow: 0 0 20px rgba(166, 227, 161, 0.6);
+}
+
+#viewport-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #1e222a;
+  overflow: hidden;
+}
+
+.viewport-overlay {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 15px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.btn-sim, .btn-undo, .btn-reset, .btn-view {
+  pointer-events: auto;
+}
+
+.btn-view {
+  padding: 12px 20px;
+  background: rgba(20, 23, 30, 0.85);
+  border: 1px solid #cba6f7;
+  color: #cba6f7;
+  font-family: 'Orbitron', sans-serif;
+  border-radius: 30px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  transition: 0.3s;
+}
+.btn-view:hover { background: #cba6f7; color: #1e222a; }
+
+.btn-sim {
+  padding: 12px 25px;
+  background: rgba(20, 23, 30, 0.85);
+  border: 1px solid #a6e3a1;
+  color: #a6e3a1;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: bold;
+  border-radius: 30px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: 0.3s;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+.btn-sim:hover { background: #a6e3a1; color: #1e222a; }
+
+.btn-undo {
+  padding: 12px 20px;
+  background: rgba(20, 23, 30, 0.85);
+  border: 1px solid #f9e2af;
+  color: #f9e2af;
+  font-family: 'Orbitron', sans-serif;
+  border-radius: 30px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  transition: 0.3s;
+}
+.btn-undo:hover { background: #f9e2af; color: #1e222a; }
+
+.btn-reset {
+  padding: 12px 20px;
+  background: rgba(20, 23, 30, 0.85);
+  border: 1px solid #f38ba8;
+  color: #f38ba8;
+  font-family: 'Orbitron', sans-serif;
+  border-radius: 30px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  transition: 0.3s;
+}
+.btn-reset:hover { background: #f38ba8; color: #1e222a; }
+
+.ai-bubble {
+  position: fixed;
+  bottom: 95px;
+  right: 25px;
+  background: rgba(20, 23, 30, 0.95);
+  border: 1px solid #00ffff;
+  color: #00ffff;
+  padding: 10px 16px;
+  border-radius: 18px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 14px;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+  z-index: 2001;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.ai-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  right: 22px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid #00ffff;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.ai-toggle-btn {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7dcfff, #00ffff);
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  cursor: pointer;
+  z-index: 2000;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.ai-toggle-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+}
+
+.ai-panel {
+  position: fixed;
+  bottom: 95px;
+  right: 25px;
+  width: 380px;
+  height: 520px;
+  background: rgba(20, 23, 30, 0.95);
+  border: 1px solid rgba(137, 180, 250, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1999;
+  backdrop-filter: blur(12px);
+}
+.ai-panel.open {
+  display: flex;
+}
+
+.ai-chat-box {
+  flex: 1;
+  min-height: 0;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat-msg {
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 90%;
+}
+.chat-msg.ai {
+  background: rgba(30, 34, 42, 0.8);
+  border-left: 3px solid #7dcfff;
+  align-self: flex-start;
+  color: #cdd6f4;
+}
+.chat-msg.user {
+  background: rgba(0, 255, 255, 0.12);
+  border-right: 3px solid #00ffff;
+  align-self: flex-end;
+  color: #ffffff;
+}
+
+.ai-quick-actions {
+  padding: 8px 12px;
+  background: rgba(30, 34, 42, 0.5);
+  border-top: 1px solid rgba(137, 180, 250, 0.1);
+  display: flex;
+  gap: 8px;
+}
+
+.btn-ai-analyze {
+  width: 100%;
+  padding: 8px;
+  background: rgba(0, 255, 255, 0.15);
+  border: 1px solid #00ffff;
+  color: #00ffff;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.btn-ai-analyze:hover {
+  background: rgba(0, 255, 255, 0.3);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+}
+
+.ai-input-area {
+  flex-shrink: 0;
+  padding: 12px;
+  border-top: 1px solid rgba(137, 180, 250, 0.2);
+  display: flex;
+  gap: 8px;
+  background: rgba(20, 23, 30, 0.95);
+}
+
+.ai-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #7dcfff;
+  border-radius: 4px;
+  padding: 10px;
+  color: #00ffff;
+  font-family: 'Share Tech Mono', monospace;
+  outline: none;
+}
+
+.btn-send {
+  background: #7dcfff;
+  color: #1e222a;
+  border: none;
+  padding: 0 15px;
+  font-weight: bold;
+  font-family: 'Orbitron', sans-serif;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn-send:hover {
+  background: #00ffff;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+</style>
+
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <nav class="navbar-nav">
+      <a href="#" class="nav-link" onclick="location.href='index.html'">首頁</a>
+      <div class="dropdown">
+        <button class="dropbtn">數學資料庫 ▼</button>
+        <div class="dropdown-content">
+          <a href="#" onclick="location.href='1-sct-homepage.html'">> 三角函數</a>
+          <a href="#" onclick="location.href='1-lf-homepage.html'">> 線性函數</a>
+          <a href="#" onclick="location.href='game-homepage.html'">> 鐵道系統</a>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-item">總長度: <span id="st-len" class="status-value">0 m</span></div>
+    <div class="status-item">最高點: <span id="st-maxy" class="status-value">0 m</span></div>
+    <div class="status-item">安全狀態: <span id="st-safe" class="status-value" style="color:#a6e3a1;">良好</span></div>
+  </div>
+
+  <div class="download-container" style="display: flex; gap: 10px; align-items: center;">
+    <input type="file" id="json-file-input" accept=".json" style="display: none;" onchange="loadTrackData(event)">
+    <button class="btn-download" onclick="document.getElementById('json-file-input').click()" style="padding: 8px 15px; background: rgba(255, 154, 162, 0.15); border: 1px solid #ff9aa2; color: #ff9aa2; font-family: 'Orbitron', sans-serif; border-radius: 20px; cursor: pointer; transition: 0.3s;">📂 讀取存檔 (.json)</button>
+    <button class="btn-download" onclick="downloadTrackData()" style="padding: 8px 15px; background: rgba(0, 255, 255, 0.15); border: 1px solid #00ffff; color: #00ffff; font-family: 'Orbitron', sans-serif; border-radius: 20px; cursor: pointer; transition: 0.3s;">💾 下載存檔 (.json)</button>
+    <button class="btn-download" onclick="download3DModelWithAnim()" style="padding: 8px 15px; background: rgba(166, 227, 161, 0.15); border: 1px solid #a6e3a1; color: #a6e3a1; font-family: 'Orbitron', sans-serif; border-radius: 20px; cursor: pointer; transition: 0.3s;">🎬 匯出含動畫 3D 模型 (.glb)</button>
+  </div>
+</header>
+
+<div class="main-layout">
+  <div class="panel">
+    <div class="panel-header">
+      <span>🎢 雲霄飛車 Roller Coaster</span>
+    </div>
+
+    <div class="module-tabs">
+      <button class="tab-btn active" onclick="switchTab(event, 'linear')">一次函數</button>
+      <button class="tab-btn" onclick="switchTab(event, 'quad')">二次函數</button>
+      <button class="tab-btn" onclick="switchTab(event, 'trig')">三角函數</button>
+      <button class="tab-btn" onclick="switchTab(event, 'geo')">和差角/定理</button>
+    </div>
+
+    <div id="tab-linear" class="control-section active">
+      <div style="color:#00ffff; font-size:14px; margin-bottom:12px;">直線爬升/降坡: \( y = mx + b \)</div>
+      <div class="form-group">
+        <label>斜率 (m): <span id="m-val" class="val-tag">0.3</span></label>
+        <input type="range" id="slider-m" min="-1" max="1" step="0.1" value="0.3">
+      </div>
+      <div class="form-group">
+        <label>垂直高度偏移 (b): <span id="b-val" class="val-tag">0</span></label>
+        <input type="range" id="slider-b" min="-10" max="10" step="1" value="0">
+      </div>
+      <div class="form-group">
+        <label>前進距離 (\(\Delta x\)): <span id="l-val" class="val-tag">40</span></label>
+        <input type="range" id="slider-l1" min="10" max="100" step="5" value="40">
+      </div>
+      <button class="btn-add-track" onclick="addLinearTrack()">拼接一次函數軌道</button>
+    </div>
+
+    <div id="tab-quad" class="control-section">
+      <div style="color:#00ffff; font-size:14px; margin-bottom:4px;">拋物線谷底/山丘: y = a(x-h)² + k</div>
+      <div style="color:#89b4fa; font-size:12px; margin-bottom:12px;">※ 自動銜接約束：a = -k / h²</div>
+      <div class="form-group">
+        <label>頂點相對高度 (k): <span id="k-val" class="val-tag">15</span></label>
+        <input type="range" id="slider-k" min="-10" max="30" step="1" value="15">
+      </div>
+      <div class="form-group">
+        <label>山丘/谷底跨度 (h): <span id="h-val" class="val-tag">20</span></label>
+        <input type="range" id="slider-h" min="10" max="50" step="2" value="20">
+      </div>
+      <div class="form-group" style="background: rgba(0,0,0,0.2); padding: 8px 10px; border-radius: 4px; border: 1px dashed rgba(137, 180, 250, 0.3);">
+        <label style="margin-bottom: 0;">自動計算開口係數 (a): <span id="a-calc-val" class="val-tag" style="color: #a6e3a1;">-0.0375</span></label>
+      </div>
+      <button class="btn-add-track" onclick="addQuadTrack()">拼接二次函數軌道</button>
+    </div>
+
+    <div id="tab-trig" class="control-section">
+      <div style="color:#00ffff; font-size:14px; margin-bottom:12px;">選擇三角函數類型：</div>
+      <div class="form-group">
+        <label>函數公式：</label>
+        <select id="select-trig-type" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.4); color: #00ffff; border: 1px solid #7dcfff; border-radius: 4px; font-family: 'Share Tech Mono', monospace;">
+          <option value="sin" selected>y = A sin(Bx) （正弦波峰）</option>
+          <option value="cos">y = A cos(Bx) （餘弦波峰）</option>
+          <option value="tan">y = A tan(Bx) （正切陡升/垂降）</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>振幅 / 縮放 (A): <span id="A-val" class="val-tag">12</span></label>
+        <input type="range" id="slider-A" min="5" max="30" step="1" value="12">
+      </div>
+      <div class="form-group">
+        <label>頻率 / 週期 (B): <span id="B-val" class="val-tag">0.15</span></label>
+        <input type="range" id="slider-B" min="0.05" max="0.3" step="0.01" value="0.15">
+      </div>
+      <button class="btn-add-track" onclick="addTrigTrack()">拼接三角函數波浪</button>
+    </div>
+
+    <div id="tab-geo" class="control-section">
+      <div style="color:#00ffff; font-size:14px; margin-bottom:12px;">選擇和差角公式：</div>
+      <div class="form-group">
+        <label>公式類型：</label>
+        <select id="select-geo-formula" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.4); color: #00ffff; border: 1px solid #7dcfff; border-radius: 4px; font-family: 'Share Tech Mono', monospace;">
+          <option value="cos_add" selected>cos(α + β) = cos α cos β - sin α sin β</option>
+          <option value="sin_add">sin(α + β) = sin α cos β + cos α sin β</option>
+          <option value="cos_sub">cos(α - β) = cos α cos β + sin α sin β</option>
+          <option value="sin_sub">sin(α - β) = sin α cos β - cos α sin β</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>進場角度 (α): <span id="alpha-val" class="val-tag">45°</span></label>
+        <input type="range" id="slider-alpha" min="0" max="90" step="15" value="45">
+      </div>
+      <div class="form-group">
+        <label>修正角度 (β): <span id="beta-val" class="val-tag">45°</span></label>
+        <input type="range" id="slider-beta" min="-45" max="90" step="15" value="45">
+      </div>
+      <button class="btn-add-track" onclick="addGeoTrack()">拼接和差角轉向軌道</button>
+    </div>
+
+    <div style="padding: 15px; border-top: 1px solid rgba(137, 180, 250, 0.2); margin-top: auto;">
+      <button class="btn-preset" onclick="generateClosedLoop()">🎯 一鍵生成完整閉合軌道</button>
+    </div>
+  </div>
+
+  <div id="viewport-container">
+    <div class="viewport-overlay">
+      <button class="btn-view" id="btnView" onclick="toggleViewMode()">切換至2D平面檢視</button>
+      <button class="btn-sim" id="btnSim" onclick="toggleSimulation()">軌道運行測試</button>
+      <button class="btn-undo" onclick="undoLastAction()" title="快捷鍵: Ctrl + Z">↩ 回上一步 Ctrl+Z </button>
+      <button class="btn-reset" onclick="resetTracks()">↺ 清空軌道 Retry </button>
+    </div>
+  </div>
+</div>
+
+<div class="ai-bubble" id="aiBubble" onclick="openAiPanelFromBubble()">
+💬嘿!有需要幫忙嗎？
+</div>
+
+<div class="ai-toggle-btn" onclick="toggleAiPanel()" title="開啟 AI 助手">🤖</div>
+
+<div class="ai-panel" id="aiPanel">
+  <div class="panel-header">
+    <span>🤖 AI 樂園工程助手</span>
+    <button onclick="toggleAiPanel()" style="background:none; border:none; color:#f38ba8; cursor:pointer; font-size:16px;">✖</button>
+  </div>
+
+  <div class="ai-chat-box" id="aiChat">
+    <div class="chat-msg ai">
+      你好！我是首席數學工程師 AI。我正在即時追蹤你的建構狀態。<br>若在拼接過程不小心做錯，可以隨時按下「<b>↩ 回上一步</b>」或快捷鍵 <b>Ctrl+Z</b> 重試！
+    </div>
+  </div>
+
+  <div class="ai-quick-actions">
+    <button class="btn-ai-analyze" onclick="requestAiAnalysis()">🔍 智慧分析目前軌道與設計建議</button>
+  </div>
+
+  <div class="ai-input-area">
+    <input type="text" id="aiInput" class="ai-input" placeholder="詢問 AI 助手或尋求建議..." onkeypress="handleKeyPress(event)">
+    <button class="btn-send" onclick="sendAiMessage()">發送</button>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+
+window.THREE = THREE;
+
+let scene, camera, perspectiveCamera, orthographicCamera, renderer, controls;
+window.trackPoints = [];
+window.currentHeading = 0; // 車頭全域方向角 (弧度)
+
+let trackLine, trainMesh;
+let isSimulating = false;
+let trainProgress = 0;
+
+let historyStack = [];
+window.userBehaviorLog = [];
+
+window.is2DMode = false;
+let isTransitioningCamera = false;
+let cameraTransitionProgress = 0;
+let transitionStartPos = new THREE.Vector3();
+let transitionTargetPos = new THREE.Vector3();
+let transitionStartTarget = new THREE.Vector3();
+let transitionEndTarget = new THREE.Vector3();
+
+window.recordUserBehavior = function(actionType, detail = {}) {
+  const logEntry = {
+    timestamp: Date.now(),
+    action: actionType,
+    detail: detail,
+    currentTrackLength: window.trackPoints.length
+  };
+  window.userBehaviorLog.push(logEntry);
+  checkBehaviorPattern();
+};
+
+window.saveState = function() {
+  const snapshot = {
+    points: window.trackPoints.map(p => p.clone()),
+    heading: window.currentHeading
+  };
+  historyStack.push(snapshot);
+  if (historyStack.length > 30) {
+    historyStack.shift();
+  }
+};
+
+window.undoLastAction = function() {
+  if (historyStack.length === 0) {
+    alert("已經回到最初始狀態，無法再回上一步！");
+    return;
+  }
+
+  const snapshot = historyStack.pop();
+  window.trackPoints = snapshot.points;
+  window.currentHeading = snapshot.heading;
+  window.rebuildTrackMesh();
+  window.recordUserBehavior('UNDO_ACTION', { remainingHistory: historyStack.length });
+};
+
+function checkBehaviorPattern() {
+  const recentUndoLogs = window.userBehaviorLog
+    .filter(log => log.action === 'UNDO_ACTION')
+    .slice(-2);
+
+  if (recentUndoLogs.length >= 2) {
+    const timeDiff = recentUndoLogs[1].timestamp - recentUndoLogs[0].timestamp;
+    if (timeDiff <= 3000) {
+      showAiBubble("需要幫忙嗎？");
+    }
+  }
+}
+
+window.showAiBubble = function(message) {
+  const bubble = document.getElementById('aiBubble');
+  const aiPanel = document.getElementById('aiPanel');
+
+  if (aiPanel.classList.contains('open')) return;
+
+  bubble.innerHTML = `💬 ${message}`;
+  bubble.style.display = 'flex';
+
+  clearTimeout(window.bubbleTimeout);
+  window.bubbleTimeout = setTimeout(() => {
+    bubble.style.display = 'none';
+  }, 6000);
+};
+
+window.openAiPanelFromBubble = function() {
+  const bubble = document.getElementById('aiBubble');
+  bubble.style.display = 'none';
+  
+  const aiPanel = document.getElementById('aiPanel');
+  if (!aiPanel.classList.contains('open')) {
+    toggleAiPanel();
+  }
+};
+
+function init3D() {
+  const container = document.getElementById('viewport-container');
+  const aspect = container.clientWidth / container.clientHeight;
+  
+  scene = new THREE.Scene();
+
+  scene.background = new THREE.Color(0xfba58c);  // 溫暖夕陽橘粉色
+  scene.fog = new THREE.Fog(0xfba58c, 3000, 15000);
+  perspectiveCamera = new THREE.PerspectiveCamera(60, aspect, 1, 500000);
+  perspectiveCamera.position.set(0, 150, 220);
+
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(20000, 20000), new THREE.MeshStandardMaterial({ color: 0x34495e, roughness: 0.8 }));
+  ground.rotation.x = -Math.PI / 2;
+  scene.add(ground);
+  const gridHelper = new THREE.GridHelper(20000, 100, 0x3b4261, 0x1a1d24);
+  scene.add(gridHelper);
+
+  const frustumSize = 250;
+  orthographicCamera = new THREE.OrthographicCamera(
+    (frustumSize * aspect) / -2,
+    (frustumSize * aspect) / 2,
+    frustumSize / 2,
+    frustumSize / -2,
+    1,
+    500000
+  );
+  orthographicCamera.position.set(0, 300, 0);
+
+  camera = perspectiveCamera;
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  container.appendChild(renderer.domElement);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.screenSpacePanning = true;
+
+  scene.add(new THREE.AmbientLight(0xcdd6f4, 0.15));
+  const dirLight = new THREE.DirectionalLight(0xffd1a4, 2.0); // 暖黃夕陽光
+  dirLight.position.set(1000, 2000, 1000);
+  scene.add(dirLight);
+  scene.add(new THREE.AmbientLight(0xffe4d6, 0.8)); // 暖色環境光
+
+  const grid = new THREE.GridHelper(20000, 100, 0x3b4261, 0x1a1d24);
+  scene.add(grid);
+
+  window.trackPoints = [
+    new THREE.Vector3(0, 10, 0)
+  ];
+  window.currentHeading = 0;
+
+  const cartGeo = new THREE.BoxGeometry(6, 4, 10);
+  const cartMat = new THREE.MeshStandardMaterial({ color: 0xff5e36, emissive: 0x661100 });
+  trainMesh = new THREE.Mesh(cartGeo, cartMat);
+  trainMesh.position.set(0, 10, 0);
+  scene.add(trainMesh);
+
+  window.rebuildTrackMesh();
+  animate();
+}
+
+window.toggleViewMode = function() {
+  window.is2DMode = !window.is2DMode;
+  const btn = document.getElementById('btnView');
+
+  isTransitioningCamera = true;
+  cameraTransitionProgress = 0;
+  transitionStartPos.copy(camera.position);
+  transitionStartTarget.copy(controls.target);
+
+  if (window.is2DMode) {
+    btn.innerText = "切換至3D空間檢視";
+    btn.style.borderColor = "#00ffff";
+    btn.style.color = "#00ffff";
+
+    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+    window.trackPoints.forEach(p => {
+      if (p.x < minX) minX = p.x;
+      if (p.x > maxX) maxX = p.x;
+      if (p.z < minZ) minZ = p.z;
+      if (p.z > maxZ) maxZ = p.z;
+    });
+    const centerX = (minX + maxX) / 2 || 0;
+    const centerZ = (minZ + maxZ) / 2 || 0;
+
+    transitionEndTarget.set(centerX, 0, centerZ);
+    transitionTargetPos.set(centerX, 300, centerZ + 0.1);
+
+    const container = document.getElementById('viewport-container');
+    const aspect = container.clientWidth / container.clientHeight;
+    const trackWidth = Math.max((maxX - minX) * 1.4, 120);
+    const trackHeight = Math.max((maxZ - minZ) * 1.4, 120);
+    const frustumSize = Math.max(trackWidth / aspect, trackHeight);
+
+    orthographicCamera.left = (-frustumSize * aspect) / 2;
+    orthographicCamera.right = (frustumSize * aspect) / 2;
+    orthographicCamera.top = frustumSize / 2;
+    orthographicCamera.bottom = -frustumSize / 2;
+    orthographicCamera.updateProjectionMatrix();
+
+  } else {
+    btn.innerText = "切換至2D平面檢視";
+    btn.style.borderColor = "#cba6f7";
+    btn.style.color = "#cba6f7";
+
+    const lastPt = window.getLatestPoint();
+    transitionEndTarget.set(lastPt.x / 2, lastPt.y / 2, lastPt.z / 2);
+    transitionTargetPos.set(lastPt.x + 80, lastPt.y + 100, lastPt.z + 150);
+  }
+
+  window.recordUserBehavior('TOGGLE_VIEW_MODE', { mode: window.is2DMode ? '2D' : '3D' });
+};
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  if (isTransitioningCamera) {
+    cameraTransitionProgress += 0.05;
+    if (cameraTransitionProgress >= 1) {
+      cameraTransitionProgress = 1;
+      isTransitioningCamera = false;
+
+      if (window.is2DMode) {
+        camera = orthographicCamera;
+        controls.object = orthographicCamera;
+        controls.enableRotate = false;
+      } else {
+        camera = perspectiveCamera;
+        controls.object = perspectiveCamera;
+        controls.enableRotate = true;
+      }
+    }
+
+    const t = cameraTransitionProgress;
+    const easeT = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+
+    camera.position.lerpVectors(transitionStartPos, transitionTargetPos, easeT);
+    controls.target.lerpVectors(transitionStartTarget, transitionEndTarget, easeT);
+  }
+
+  controls.update();
+
+  if (isSimulating && window.trackPoints.length > 1) {
+    trainProgress += 0.003;
+    
+    if (trainProgress >= 1) {
+      trainProgress = 0;
+    }
+
+    const curve = new THREE.CatmullRomCurve3(window.trackPoints);
+    const point = curve.getPointAt(Math.min(trainProgress, 1));
+    const tangent = curve.getTangentAt(Math.min(trainProgress, 1));
+
+    trainMesh.position.copy(point);
+    trainMesh.lookAt(point.clone().add(tangent));
+  }
+
+  renderer.render(scene, camera);
+}
+
+window.rebuildTrackMesh = function() {
+  if (trackLine) scene.remove(trackLine);
+  if (window.trackPoints.length < 2) return;
+
+  const curve = new THREE.CatmullRomCurve3(window.trackPoints);
+  const tubeGeo = new THREE.TubeGeometry(curve, window.trackPoints.length * 5, 1.5, 8, false);
+  const tubeMat = new THREE.MeshStandardMaterial({ 
+    color: 0x00ffff,
+    emissive: 0x005577,
+    metalness: 0.8,
+    roughness: 0.1
+  });
+  trackLine = new THREE.Mesh(tubeGeo, tubeMat);
+  scene.add(trackLine);
+
+  let maxY = 0;
+  window.trackPoints.forEach(p => { if(p.y > maxY) maxY = p.y; });
+  document.getElementById('st-maxy').innerText = `${maxY.toFixed(1)} m`;
+  document.getElementById('st-len').innerText = `${(window.trackPoints.length * 5).toFixed(0)} m`;
+
+  const startPt = window.trackPoints[0];
+  const endPt = window.trackPoints[window.trackPoints.length - 1];
+  const dist = startPt.distanceTo(endPt);
+
+  const safeEl = document.getElementById('st-safe');
+  if (window.trackPoints.length > 5 && dist < 3.0) {
+    safeEl.innerText = "✅ 軌道完美閉合";
+    safeEl.style.color = "#a6e3a1";
+  } else {
+    safeEl.innerText = `未閉合 (差距: ${dist.toFixed(1)}m)`;
+    safeEl.style.color = "#f38ba8";
+  }
+
+  window.updateTrainToStart();
+}
+
+window.updateTrainToStart = function() {
+  if (window.trackPoints.length > 1) {
+    const curve = new THREE.CatmullRomCurve3(window.trackPoints);
+    const point = curve.getPointAt(0);
+    const tangent = curve.getTangentAt(0);
+    trainMesh.position.copy(point);
+    trainMesh.lookAt(point.clone().add(tangent));
+  }
+}
+
+window.getLatestPoint = function() {
+  return window.trackPoints[window.trackPoints.length - 1].clone();
+}
+
+window.resetTracks = function() {
+  if (window.trackPoints.length > 1) {
+    window.saveState();
+  }
+  window.trackPoints = [
+    new THREE.Vector3(0, 10, 0)
+  ];
+  window.currentHeading = 0;
+  window.rebuildTrackMesh();
+  isSimulating = false;
+  trainProgress = 0;
+  document.getElementById('btnSim').innerText = "▶ 放行雲霄飛車測試";
+  window.recordUserBehavior('RESET_ALL');
+}
+
+window.toggleSimulation = function() {
+  if(window.trackPoints.length < 2) return;
+  
+  if (!isSimulating) {
+    trainProgress = 0;
+    isSimulating = true;
+    document.getElementById('btnSim').innerText = "⏹ 測試行駛中...";
+    window.recordUserBehavior('START_SIMULATION');
+  } else {
+    isSimulating = false;
+    trainProgress = 0;
+    window.updateTrainToStart();
+    document.getElementById('btnSim').innerText = "▶ 放行雲霄飛車測試";
+    window.recordUserBehavior('STOP_SIMULATION');
+  }
+}
+
+window.downloadTrackData = function() {
+  if (window.trackPoints.length < 2) return alert("目前沒有可導出的軌道數據！");
+  const trackData = { 
+    heading: window.currentHeading,
+    coordinates: window.trackPoints.map(p => ({ x: p.x, y: p.y, z: p.z })) 
+  };
+  const blob = new Blob([JSON.stringify(trackData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Math_Coaster_Track_${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+window.loadTrackData = function(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.coordinates && Array.isArray(data.coordinates)) {
+        window.saveState();
+        window.trackPoints = data.coordinates.map(p => new THREE.Vector3(p.x, p.y, p.z));
+        window.currentHeading = data.heading || 0;
+        window.rebuildTrackMesh();
+        alert("軌道存檔讀取成功！");
+      }
+    } catch (err) { alert("檔案讀取失敗！"); }
+  };
+  reader.readAsText(file);
+};
+
+window.download3DModelWithAnim = function() {
+  if (!trackLine || window.trackPoints.length < 2) return alert("請先構建軌道！");
+
+  const curve = new THREE.CatmullRomCurve3(window.trackPoints);
+  const sampleCount = 100, duration = 10;
+  const times = [], posValues = [], rotValues = [];
+  const tempMesh = new THREE.Object3D();
+
+  for (let i = 0; i <= sampleCount; i++) {
+    const t = i / sampleCount;
+    times.push(t * duration);
+    const pt = curve.getPointAt(t);
+    const tangent = curve.getTangentAt(t);
+    posValues.push(pt.x, pt.y, pt.z);
+    tempMesh.position.copy(pt);
+    tempMesh.lookAt(pt.clone().add(tangent));
+    rotValues.push(tempMesh.quaternion.x, tempMesh.quaternion.y, tempMesh.quaternion.z, tempMesh.quaternion.w);
+  }
+
+  const posTrack = new THREE.VectorKeyframeTrack('CoasterTrain.position', times, posValues);
+  const rotTrack = new THREE.QuaternionKeyframeTrack('CoasterTrain.quaternion', times, rotValues);
+  const clip = new THREE.AnimationClip('CoasterDriveAnimation', duration, [posTrack, rotTrack]);
+
+  const rootScene = new THREE.Group();
+  rootScene.name = "Scene";
+  rootScene.add(trackLine.clone());
+  rootScene.add(trainMesh.clone());
+  rootScene.animations = [clip];
+
+  const exporter = new GLTFExporter();
+  exporter.parse(rootScene, function (gltf) {
+    const blob = new Blob([gltf], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Math_Coaster_Animated_${Date.now()}.glb`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, { binary: true, animations: [clip] });
+};
+
+window.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+    e.preventDefault();
+    window.undoLastAction();
+  }
+});
+
+window.addEventListener('resize', () => {
+  const container = document.getElementById('viewport-container');
+  const aspect = container.clientWidth / container.clientHeight;
+
+  perspectiveCamera.aspect = aspect;
+  perspectiveCamera.updateProjectionMatrix();
+
+  const frustumSize = 250;
+  orthographicCamera.left = (-frustumSize * aspect) / 2;
+  orthographicCamera.right = (frustumSize * aspect) / 2;
+  orthographicCamera.top = frustumSize / 2;
+  orthographicCamera.bottom = -frustumSize / 2;
+  orthographicCamera.updateProjectionMatrix();
+
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+init3D();
+</script>
+
+<script>
+function toggleAiPanel() {
+  const panel = document.getElementById('aiPanel');
+  panel.classList.toggle('open');
+  const bubble = document.getElementById('aiBubble');
+  if (bubble) bubble.style.display = 'none';
+}
+
+function switchTab(evt, tabId) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.control-section').forEach(sec => sec.classList.remove('active'));
+  evt.currentTarget.classList.add('active');
+  document.getElementById(`tab-${tabId}`).classList.add('active');
+  if (window.recordUserBehavior) window.recordUserBehavior('SWITCH_TAB', { tab: tabId });
+}
+
+function updateQuadA() {
+  const k = parseFloat(document.getElementById('slider-k').value);
+  const h = parseFloat(document.getElementById('slider-h').value);
+  const a = -k / (h * h);
+  document.getElementById('a-calc-val').innerText = a.toFixed(4);
+}
+
+document.getElementById('slider-m').oninput = (e) => document.getElementById('m-val').innerText = e.target.value;
+document.getElementById('slider-b').oninput = (e) => document.getElementById('b-val').innerText = e.target.value;
+document.getElementById('slider-l1').oninput = (e) => document.getElementById('l-val').innerText = e.target.value;
+document.getElementById('slider-h').oninput = (e) => {
+  document.getElementById('h-val').innerText = e.target.value;
+  updateQuadA();
+};
+document.getElementById('slider-k').oninput = (e) => {
+  document.getElementById('k-val').innerText = e.target.value;
+  updateQuadA();
+};
+document.getElementById('slider-A').oninput = (e) => document.getElementById('A-val').innerText = e.target.value;
+document.getElementById('slider-B').oninput = (e) => document.getElementById('B-val').innerText = e.target.value;
+document.getElementById('slider-alpha').oninput = (e) => document.getElementById('alpha-val').innerText = `${e.target.value}°`;
+document.getElementById('slider-beta').oninput = (e) => document.getElementById('beta-val').innerText = `${e.target.value}°`;
+
+updateQuadA();
+
+// 1. 一次函數 (沿車頭方向延伸)
+function addLinearTrack() {
+  const m = parseFloat(document.getElementById('slider-m').value);
+  const b = parseFloat(document.getElementById('slider-b').value);
+  const len = parseFloat(document.getElementById('slider-l1').value);
+  const lastPt = window.getLatestPoint();
+
+  const dirX = Math.cos(window.currentHeading);
+  const dirZ = Math.sin(window.currentHeading);
+
+  window.saveState();
+
+  for(let s = 2; s <= len; s += 2) {
+    const newY = lastPt.y + (m * s) + b;
+    window.trackPoints.push(new THREE.Vector3(
+      lastPt.x + dirX * s,
+      Math.max(2, newY),
+      lastPt.z + dirZ * s
+    ));
+  }
+
+  window.rebuildTrackMesh();
+  window.recordUserBehavior('ADD_TRACK_SEGMENT', { pointCount: window.trackPoints.length });
+}
+
+// 2. 二次函數 (沿車頭方向拋物線)
+function addQuadTrack() {
+  const k = parseFloat(document.getElementById('slider-k').value);
+  const h = parseFloat(document.getElementById('slider-h').value);
+  const lastPt = window.getLatestPoint();
+
+  const dirX = Math.cos(window.currentHeading);
+  const dirZ = Math.sin(window.currentHeading);
+  const a = -k / (h * h);
+
+  window.saveState();
+
+  for (let s = 2; s <= 2 * h; s += 2) {
+    const relativeY = a * Math.pow(s - h, 2) + k;
+    window.trackPoints.push(new THREE.Vector3(
+      lastPt.x + dirX * s,
+      Math.max(2, lastPt.y + relativeY),
+      lastPt.z + dirZ * s
+    ));
+  }
+
+  window.rebuildTrackMesh();
+  window.recordUserBehavior('ADD_TRACK_SEGMENT', { pointCount: window.trackPoints.length });
+}
+
+// 3. 三角函數 (沿車頭方向起伏)
+function addTrigTrack() {
+  const A = parseFloat(document.getElementById('slider-A').value);
+  const B = parseFloat(document.getElementById('slider-B').value);
+  const trigType = document.getElementById('select-trig-type').value;
+  const lastPt = window.getLatestPoint();
+
+  const dirX = Math.cos(window.currentHeading);
+  const dirZ = Math.sin(window.currentHeading);
+
+  window.saveState();
+
+  for (let s = 2; s <= 50; s += 2) {
+    let y = 0;
+    if (trigType === 'sin') y = A * Math.sin(B * s);
+    else if (trigType === 'cos') y = A * Math.cos(B * s);
+    else if (trigType === 'tan') {
+      const tanVal = Math.tan((B * s) % (Math.PI / 2.2));
+      y = A * Math.min(Math.max(tanVal, -2), 2);
+    }
+    window.trackPoints.push(new THREE.Vector3(
+      lastPt.x + dirX * s,
+      Math.max(2, lastPt.y + y),
+      lastPt.z + dirZ * s
+    ));
+  }
+
+  window.rebuildTrackMesh();
+  window.recordUserBehavior('ADD_TRACK_SEGMENT', { pointCount: window.trackPoints.length });
+}
+
+// 4. 和差角/定理彎道 (平滑旋轉並更新全域 Heading)
+function addGeoTrack() {
+  const alphaDeg = parseFloat(document.getElementById('slider-alpha').value);
+  const betaDeg = parseFloat(document.getElementById('slider-beta').value);
+  const formulaType = document.getElementById('select-geo-formula').value;
+  
+  const alpha = alphaDeg * Math.PI / 180;
+  const beta = betaDeg * Math.PI / 180;
+
+  let calculatedVal = 0;
+  switch(formulaType) {
+    case 'cos_add': calculatedVal = Math.cos(alpha) * Math.cos(beta) - Math.sin(alpha) * Math.sin(beta); break;
+    case 'sin_add': calculatedVal = Math.sin(alpha) * Math.cos(beta) + Math.cos(alpha) * Math.sin(beta); break;
+    case 'cos_sub': calculatedVal = Math.cos(alpha) * Math.cos(beta) + Math.sin(alpha) * Math.sin(beta); break;
+    case 'sin_sub': calculatedVal = Math.sin(alpha) * Math.cos(beta) - Math.cos(alpha) * Math.sin(beta); break;
+  }
+
+  const turnAngle = Math.acos(Math.max(-1, Math.min(1, calculatedVal)));
+  const radius = 25;
+  const steps = 12;
+  const lastPt = window.getLatestPoint();
+
+  window.saveState();
+
+  for (let i = 1; i <= steps; i++) {
+    const stepRad = (turnAngle / steps) * i;
+    const currentRad = window.currentHeading + stepRad;
+    
+    const x = lastPt.x + radius * Math.sin(stepRad) * Math.cos(window.currentHeading) + radius * (1 - Math.cos(stepRad)) * -Math.sin(window.currentHeading);
+    const z = lastPt.z + radius * Math.sin(stepRad) * Math.sin(window.currentHeading) + radius * (1 - Math.cos(stepRad)) * Math.cos(window.currentHeading);
+    
+    window.trackPoints.push(new THREE.Vector3(x, lastPt.y, z));
+  }
+  
+  window.currentHeading += turnAngle;
+  window.rebuildTrackMesh();
+  window.recordUserBehavior('ADD_TRACK_SEGMENT', { pointCount: window.trackPoints.length });
+}
+
+// 🎯 自動拼接 4 種數學模組形成閉合迴圈
+function generateClosedLoop() {
+  window.resetTracks();
+
+  // Segment 1: 直線爬升 (一次函數)
+  document.getElementById('slider-m').value = 0.4;
+  document.getElementById('slider-l1').value = 40;
+  addLinearTrack();
+
+  // Segment 2: 90度轉彎 (和差角: cos(45°+45°))
+  document.getElementById('select-geo-formula').value = 'cos_add';
+  document.getElementById('slider-alpha').value = 45;
+  document.getElementById('slider-beta').value = 45;
+  addGeoTrack();
+
+  // Segment 3: 拋物線波峰 (二次函數)
+  document.getElementById('slider-k').value = 15;
+  document.getElementById('slider-h').value = 20;
+  updateQuadA();
+  addQuadTrack();
+
+  // Segment 4: 90度轉彎
+  addGeoTrack();
+
+  // Segment 5: S型連續波浪 (三角函數)
+  document.getElementById('slider-A').value = 10;
+  addTrigTrack();
+
+  // Segment 6: 90度轉彎
+  addGeoTrack();
+
+  // Segment 7: 俯衝段 (一次函數)
+  document.getElementById('slider-m').value = -0.2;
+  document.getElementById('slider-l1').value = 40;
+  addLinearTrack();
+
+  // Segment 8: 最後轉彎閉合
+  addGeoTrack();
+
+  // 首尾貼合修正
+  window.trackPoints.push(new THREE.Vector3(0, 10, 0));
+  window.rebuildTrackMesh();
+}
+
+const LEXICON = {
+  lost: ["不知道", "沒想法", "接下來", "怎麼做", "卡住", "建議", "提示", "下一步", "無頭緒", "幹嘛", "靈感", "救我", "幫我", "怎麼玩", "卡關", "不懂"],
+  danger: ["危險", "甩出", "太快", "可怕", "翻車", "撞到", "安全", "g力", "過陡", "痛", "死", "飛出去", "太斜"],
+  height: ["高", "落差", "俯衝", "爬升", "山丘", "高空", "頂點", "下降", "低", "谷底", "斜率"],
+  wave: ["波浪", "海浪", "起伏", "震盪", "波峰", "正弦", "餘弦", "sin", "cos", "tan", "顛簸"],
+  turn: ["轉灣", "轉彎", "方向", "角度", "和角", "轉向", "迴轉", "拐彎", "彎道", "弧度"]
+};
+
+function requestAiAnalysis() {
+  appendChat("🔍 正在掃描目前的 3D 軌道結構與歷史操作紀錄...", 'user');
+  
+  setTimeout(() => {
+    const points = window.trackPoints || [];
+    const pointCount = points.length;
+    const lastPoint = pointCount > 0 ? points[pointCount - 1] : { x: 0, y: 10, z: 0 };
+    
+    let maxY = 0;
+    let totalLength = 0;
+    for (let i = 0; i < points.length; i++) {
+      if (points[i].y > maxY) maxY = points[i].y;
+      if (i > 0) totalLength += points[i].distanceTo(points[i - 1]);
+    }
+    const safeStatus = document.getElementById('st-safe')?.innerText || "良好";
+    const totalLogs = window.userBehaviorLog.length;
+
+    let report = `📊 **AI 軌道與行為體檢報告**：<br>`;
+    report += `• 軌道節點數：**${pointCount}** 個 | 總操作數：**${totalLogs}** 次<br>`;
+    report += `• 目前總長度：**${totalLength.toFixed(0)}m**<br>`;
+    report += `• 軌道最高點：**${maxY.toFixed(1)}m**<br>`;
+    report += `• 末端當前高度：**${lastPoint.y.toFixed(1)}m**<br>`;
+    report += `• 閉合狀態：**${safeStatus}**<br><br>`;
+
+    report += `💡 **給予您的設計建議**：<br>`;
+
+    if (pointCount <= 2) {
+      report += `🚀 **起步建議**：目前軌道剛建立！建議先切換到【一次函數】，設定斜率 $m = 0.4$，先為雲霄飛車建立高空爬升段蓄積位能。`;
+    } else if (lastPoint.y >= 25) {
+      report += `🎢 **高度適宜俯衝**：當前末端位於高處（**${lastPoint.y.toFixed(1)}m**），建議切換到【二次函數】，打造無重力俯衝山谷！`;
+    } else {
+      report += `🌊 **轉向與波浪**：可使用【和差角/定理】進行 90 度轉彎，或切換到【三角函數】打造起伏波浪地形！`;
+    }
+
+    appendChat(report, 'ai');
+    if (window.MathJax) MathJax.typesetPromise();
+  }, 500);
+}
+
+function sendAiMessage() {
+  const input = document.getElementById('aiInput');
+  const msg = input.value.trim();
+  
+  appendChat(msg || "（請給予軌道建置提示）", 'user');
+  input.value = '';
+
+  setTimeout(() => {
+    const reply = analyzeTextAndTrack(msg);
+    appendChat(reply, 'ai');
+    if (window.MathJax) MathJax.typesetPromise();
+  }, 400);
+}
+
+function analyzeTextAndTrack(userQuery) {
+  const text = userQuery.toLowerCase().trim();
+  const points = window.trackPoints || [];
+  const pointCount = points.length;
+  const lastPoint = pointCount > 0 ? points[pointCount - 1] : { x: 0, y: 10, z: 0 };
+
+  const score = { lost: 0, danger: 0, height: 0, wave: 0, turn: 0 };
+  Object.keys(LEXICON).forEach(category => {
+    LEXICON[category].forEach(kw => {
+      if (text.includes(kw)) score[category] += 1;
+    });
+  });
+
+  if (score.turn > 0) {
+    return `🔄 **轉彎提示**：請切換至【和差角/定理】，設定 $\\alpha=45^\\circ, \\beta=45^\\circ$ 並利用 $\\cos(\\alpha + \\beta)$ 即可精準做出 90 度轉彎！`;
+  }
+
+  if (score.wave > 0) {
+    return `🌊 **波浪設計**：建議切換到【三角函數】，選擇 $y = A \\sin(Bs)$，即可打造起伏快感！`;
+  }
+
+  return `關於「${userQuery}」：<br>目前末端高度 **${lastPoint.y.toFixed(1)}m**。你可以自由透過左側選單調節函數參數並拼接軌道，或點擊下方「🎯 一鍵生成完整閉合軌道」觀看完整演示！`;
+}
+
+function appendChat(text, sender) {
+  const box = document.getElementById('aiChat');
+  const msgDiv = document.createElement('div');
+  msgDiv.className = `chat-msg ${sender}`;
+  msgDiv.innerHTML = text;
+  box.appendChild(msgDiv);
+  box.scrollTop = box.scrollHeight;
+}
+
+function handleKeyPress(e) {
+  if(e.key === 'Enter') sendAiMessage();
+}
+</script>
+
+</body>
+</html>

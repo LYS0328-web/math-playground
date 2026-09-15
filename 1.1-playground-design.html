@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>Math Coaster Sandbox - 數學雲霄飛車沙盒與 AI 助手</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;800&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Share Tech Mono', 'Segoe UI', monospace;
+  background: #1e222a;
+  color: #bac2de;
+  overflow: hidden;
+  height: 100vh;
+}
+
+header {
+  position: absolute;
+  top: 0; left: 0; width: 100%;
+  height: 50px;
+  background: rgba(30, 34, 42, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(137, 180, 250, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 100;
+}
+
+.logo {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #89b4fa;
+  text-shadow: 0 0 8px rgba(137, 180, 250, 0.3);
+}
+
+.status-bar {
+  display: flex;
+  gap: 20px;
+  font-size: 13px;
+}
+.status-item { color: #89b4fa; }
+.status-value { color: #a6e3a1; font-weight: bold; }
+
+.main-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr 380px;
+  height: calc(100vh - 50px);
+  margin-top: 50px;
+}
+
+.panel {
+  background: rgba(20, 23, 30, 0.95);
+  border-right: 1px solid rgba(137, 180, 250, 0.2);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  overflow-y: auto;
+}
+
+.panel-header {
+  padding: 15px;
+  background: rgba(30, 34, 42, 0.85);
+  border-bottom: 1px solid rgba(137, 180, 250, 0.2);
+  font-family: 'Orbitron', sans-serif;
+  color: #89b4fa;
+  font-size: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-shadow: 0 0 8px rgba(137, 180, 250, 0.3);
+}
+
+.module-tabs {
+  display: flex;
+  background: rgba(20, 23, 30, 0.8);
+  border-bottom: 1px solid rgba(137, 180, 250, 0.15);
+}
+.tab-btn {
+  flex: 1;
+  padding: 10px 5px;
+  background: none;
+  border: none;
+  color: #7a84a6;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.tab-btn.active {
+  color: #00ffff;
+  border-bottom: 2px solid #00ffff;
+  background: rgba(0, 255, 255, 0.08);
+}
+
+.control-section {
+  padding: 15px;
+  display: none;
+}
+.control-section.active { display: block; }
+
+.form-group {
+  margin-bottom: 15px;
+}
+.form-group label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #bac2de;
+  margin-bottom: 5px;
+}
+.form-group input[type=range] {
+  width: 100%;
+  accent-color: #00ffff;
+  cursor: pointer;
+}
+.val-tag { color: #00ffff; font-weight: bold; text-shadow: 0 0 8px rgba(0, 255, 255, 0.4); }
+
+.btn-add-track {
+  width: 100%;
+  padding: 12px;
+  background: #00ffff;
+  color: #1e222a;
+  border: none;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: bold;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}
+.btn-add-track:hover {
+  background: #7dcfff;
+  box-shadow: 0 0 20px rgba(125, 207, 255, 0.6);
+}
+
+#viewport-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #1e222a;
+}
+
+.viewport-overlay {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 15px;
+  z-index: 20;
+}
+
+.btn-sim {
+  padding: 12px 25px;
+  background: rgba(20, 23, 30, 0.85);
+  border: 1px solid #a6e3a1;
+  color: #a6e3a1;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: bold;
+  border-radius: 30px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: 0.3s;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+.btn-sim:hover { background: #a6e3a1; color: #1e222a; }
+
+.btn-reset {
+  padding: 12px 20px;
+  background: rgba(20, 23, 30, 0.85);
+  border: 1px solid #f38ba8;
+  color: #f38ba8;
+  font-family: 'Orbitron', sans-serif;
+  border-radius: 30px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+/* AI 面板整體容器：固定高度，垂直方向獨立佈局 */
+.ai-panel {
+  background: rgba(20, 23, 30, 0.95);
+  border-left: 1px solid rgba(137, 180, 250, 0.2);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  z-index: 10;
+}
+
+/* 對話內容區域：彈性放大、自動滑動滾動軸 */
+.ai-chat-box {
+  flex: 1;
+  min-height: 0;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 對話滾動條樣式優化 */
+.ai-chat-box::-webkit-scrollbar {
+  width: 6px;
+}
+.ai-chat-box::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+.ai-chat-box::-webkit-scrollbar-thumb {
+  background: #7dcfff;
+  border-radius: 3px;
+}
+.ai-chat-box::-webkit-scrollbar-thumb:hover {
+  background: #00ffff;
+}
+
+.chat-msg {
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 90%;
+}
+.chat-msg.ai {
+  background: rgba(30, 34, 42, 0.8);
+  border-left: 3px solid #7dcfff;
+  align-self: flex-start;
+  color: #cdd6f4;
+}
+.chat-msg.user {
+  background: rgba(0, 255, 255, 0.12);
+  border-right: 3px solid #00ffff;
+  align-self: flex-end;
+  color: #ffffff;
+}
+
+/* 輸入框區域：高度固定不被壓縮 */
+.ai-input-area {
+  flex-shrink: 0;
+  padding: 15px;
+  border-top: 1px solid rgba(137, 180, 250, 0.2);
+  display: flex;
+  gap: 8px;
+  background: rgba(20, 23, 30, 0.95);
+}
+
+.ai-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #7dcfff;
+  border-radius: 4px;
+  padding: 10px;
+  color: #00ffff;
+  font-family: 'Share Tech Mono', monospace;
+  outline: none;
+}
+
+.btn-send {
+  background: #7dcfff;
+  color: #1e222a;
+  border: none;
+  padding: 0 15px;
+  font-weight: bold;
+  font-family: 'Orbitron', sans-serif;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn-send:hover {
+  background: #00ffff;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+</style>
+
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">🎢 MATH COASTER SANDBOX</div>
+  <div class="status-bar">
+    <div class="status-item">總長度: <span id="st-len" class="status-value">0 m</span></div>
+    <div class="status-item">最高點: <span id="st-maxy" class="status-value">0 m</span></div>
+    <div class="status-item">安全狀態: <span id="st-safe" class="status-value" style="color:#a6e3a1;">良好</span></div>
+  </div>
+ 
+  <div class="download-container" style="display: flex; gap: 10px; align-items: center;">
+    <input type="file" id="json-file-input" accept=".json" style="display: none;" onchange="loadTrackData(event)">
+    
+    <button class="btn-download" onclick="document.getElementById('json-file-input').click()" style="padding: 8px 15px; background: rgba(255, 154, 162, 0.15); border: 1px solid #ff9aa2; color: #ff9aa2; font-family: 'Orbitron', sans-serif; border-radius: 20px; cursor: pointer; transition: 0.3s;">
+      📂 讀取存檔 (.json)
+    </button>
+
+    <button class="btn-download" onclick="downloadTrackData()" style="padding: 8px 15px; background: rgba(0, 255, 255, 0.15); border: 1px solid #00ffff; color: #00ffff; font-family: 'Orbitron', sans-serif; border-radius: 20px; cursor: pointer; transition: 0.3s;">
+      💾 下載存檔 (.json)
+    </button>
+
+    <button class="btn-download" onclick="download3DModelWithAnim()" style="padding: 8px 15px; background: rgba(166, 227, 161, 0.15); border: 1px solid #a6e3a1; color: #a6e3a1; font-family: 'Orbitron', sans-serif; border-radius: 20px; cursor: pointer; transition: 0.3s;">
+      🎬 匯出含動畫 3D 模型 (.glb)
+    </button>
+  </div>
+</header>
+
+<div class="main-layout">
+  <div class="panel">
+    <div class="panel-header">
+      <span>📐 軌道數學模組</span>
+      <span style="font-size: 11px; color: #bb9af7;">v2.5</span>
+    </div>
+
+    <div class="module-tabs">
+      <button class="tab-btn active" onclick="switchTab(event, 'linear')">一次函數</button>
+      <button class="tab-btn" onclick="switchTab(event, 'quad')">二次函數</button>
+      <button class="tab-btn" onclick="switchTab(event, 'trig')">三角函數</button>
+      <button class="tab-btn" onclick="switchTab(event, 'geo')">和差角/定理</button>
+    </div>
+
+    <div id="tab-linear" class="control-section active">
+      <div style="color:#00ffff; font-size:14px; margin-bottom:12px;">直線爬升/降坡: \( y = mx + b \)</div>
+      <div class="form-group">
+        <label>斜率 (m): <span id="m-val" class="val-tag">0.5</span></label>
+        <input type="range" id="slider-m" min="-2" max="2" step="0.1" value="0.5">
+      </div>
+      <div class="form-group">
+        <label>區塊長度 (\(\Delta x\)): <span id="l-val" class="val-tag">40</span></label>
+        <input type="range" id="slider-l1" min="10" max="100" step="5" value="40">
+      </div>
+      <button class="btn-add-track" onclick="addLinearTrack()">拼接一次函數軌道</button>
+    </div>
+
+    <div id="tab-quad" class="control-section">
+      <div style="color:#00ffff; font-size:14px; margin-bottom:12px;">拋物線谷底/山丘: y = a(x-h)² + k</div>
+      
+      <div class="form-group">
+        <label>開口與曲率 (a): <span id="a-val" class="val-tag">-0.05</span></label>
+        <input type="range" id="slider-a" min="-0.2" max="0.2" step="0.01" value="-0.05">
+      </div>
+      
+      <div class="form-group">
+        <label>頂點水平偏移 (h): <span id="h-val" class="val-tag">20</span></label>
+        <input type="range" id="slider-h" min="5" max="50" step="1" value="20">
+      </div>
+
+      <div class="form-group">
+        <label>頂點鉛直高度 (k): <span id="k-val" class="val-tag">25</span></label>
+        <input type="range" id="slider-k" min="-20" max="60" step="1" value="25">
+      </div>
+      
+      <button class="btn-add-track" onclick="addQuadTrack()">拼接二次函數軌道</button>
+    </div>
+
+    <div id="tab-trig" class="control-section">
+      <div style="color:#00ffff; font-size:14px; margin-bottom:12px;">選擇三角函數類型：</div>
+
+      <div class="form-group">
+        <label>函數公式：</label>
+        <select id="select-trig-type" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.4); color: #00ffff; border: 1px solid #7dcfff; border-radius: 4px; font-family: 'Share Tech Mono', monospace;">
+          <option value="sin" selected>y = A sin(Bx) （正弦波峰）</option>
+          <option value="cos">y = A cos(Bx) （餘弦波峰）</option>
+          <option value="tan">y = A tan(Bx) （正切陡升/垂降）</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>振幅 / 縮放 (A): <span id="A-val" class="val-tag">15</span></label>
+        <input type="range" id="slider-A" min="5" max="40" step="1" value="15">
+      </div>
+
+      <div class="form-group">
+        <label>頻率 / 週期 (B): <span id="B-val" class="val-tag">0.1</span></label>
+        <input type="range" id="slider-B" min="0.02" max="0.3" step="0.01" value="0.1">
+      </div>
+
+      <button class="btn-add-track" onclick="addTrigTrack()">拼接三角函數波浪</button>
+    </div>
+
+    <div id="tab-geo" class="control-section">
+      <div style="color:#00ffff; font-size:14px; margin-bottom:12px;">選擇和差角公式：</div>
+      
+      <div class="form-group">
+        <label>公式類型：</label>
+        <select id="select-geo-formula" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.4); color: #00ffff; border: 1px solid #7dcfff; border-radius: 4px; font-family: 'Share Tech Mono', monospace;">
+          <option value="sin_add">sin(α + β) = sin α cos β + cos α sin β</option>
+          <option value="sin_sub">sin(α - β) = sin α cos β - cos α sin β</option>
+          <option value="cos_add" selected>cos(α + β) = cos α cos β - sin α sin β</option>
+          <option value="cos_sub">cos(α - β) = cos α cos β + sin α sin β</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>進場角度 (α): <span id="alpha-val" class="val-tag">30°</span></label>
+        <input type="range" id="slider-alpha" min="0" max="60" step="5" value="30">
+      </div>
+      
+      <div class="form-group">
+        <label>修正角度 (β): <span id="beta-val" class="val-tag">15°</span></label>
+        <input type="range" id="slider-beta" min="-30" max="30" step="5" value="15">
+      </div>
+      
+      <button class="btn-add-track" onclick="addGeoTrack()">拼接角度轉向軌道</button>
+    </div>
+  </div>
+
+  <div id="viewport-container">
+    <div class="viewport-overlay">
+      <button class="btn-sim" id="btnSim" onclick="toggleSimulation()">▶ 放行雲霄飛車測試</button>
+      <button class="btn-reset" onclick="resetTracks()">↺ 清空軌道</button>
+    </div>
+  </div>
+
+  <div class="ai-panel">
+    <div class="panel-header">
+      <span>🤖 AI 樂園工程助手</span>
+      <span style="font-size: 11px; color: #a6e3a1;">ONLINE</span>
+    </div>
+
+    <div class="ai-chat-box" id="aiChat">
+      <div class="chat-msg ai">
+        你好！我是首席數學工程師 AI。在建構雲霄飛車時遇到 G 力過大、軌道斷裂，或不知道接下來該怎麼做？隨時向我發問或直接按「發送」求助！
+      </div>
+    </div>
+
+    <div class="ai-input-area">
+      <input type="text" id="aiInput" class="ai-input" placeholder="詢問 AI 助手 (或直接點發送請求靈感)..." onkeypress="handleKeyPress(event)">
+      <button class="btn-send" onclick="sendAiMessage()">發送</button>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+
+window.THREE = THREE;
+
+let scene, camera, renderer, controls;
+let trackPoints = [];
+let trackLine, trainMesh;
+let isSimulating = false;
+let trainProgress = 0;
+
+function init3D() {
+  const container = document.getElementById('viewport-container');
+  
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x2a303c);
+  scene.fog = new THREE.Fog(0x2a303c, 1000, 50000);
+
+  camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 1, 500000);
+  camera.position.set(100, 80, 150);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  container.appendChild(renderer.domElement);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1.8);
+  dirLight.position.set(200, 500, 200);
+  scene.add(dirLight);
+
+  const groundGeo = new THREE.PlaneGeometry(500000, 500000);
+  const groundMat = new THREE.MeshStandardMaterial({ 
+    color: 0x313745, 
+    roughness: 0.6,
+    metalness: 0.1
+  });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.5;
+  scene.add(ground);
+
+  const grid = new THREE.GridHelper(500000, 2500, 0x585b70, 0x45475a);
+  scene.add(grid);
+
+  trackPoints = [
+    new THREE.Vector3(0, 10, 0),
+    new THREE.Vector3(20, 15, 0)
+  ];
+
+  const cartGeo = new THREE.BoxGeometry(6, 4, 10);
+  const cartMat = new THREE.MeshStandardMaterial({ color: 0xff5e36, emissive: 0x661100 });
+  trainMesh = new THREE.Mesh(cartGeo, cartMat);
+  trainMesh.position.set(0, 10, 0);
+  scene.add(trainMesh);
+
+  window.rebuildTrackMesh();
+  animate();
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+
+  if (isSimulating && trackPoints.length > 1) {
+    trainProgress += 0.003;
+    
+    if (trainProgress >= 1) {
+      trainProgress = 0;
+      isSimulating = false;
+      document.getElementById('btnSim').innerText = "▶ 放行雲霄飛車測試";
+    }
+
+    const curve = new THREE.CatmullRomCurve3(trackPoints);
+    const point = curve.getPointAt(Math.min(trainProgress, 1));
+    const tangent = curve.getTangentAt(Math.min(trainProgress, 1));
+
+    trainMesh.position.copy(point);
+    trainMesh.lookAt(point.clone().add(tangent));
+  }
+
+  renderer.render(scene, camera);
+}
+
+window.rebuildTrackMesh = function() {
+  if (trackLine) scene.remove(trackLine);
+  if (trackPoints.length < 2) return;
+
+  const curve = new THREE.CatmullRomCurve3(trackPoints);
+  const tubeGeo = new THREE.TubeGeometry(curve, trackPoints.length * 10, 1.5, 8, false);
+  const tubeMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, metalness: 0.8, roughness: 0.2 });
+  trackLine = new THREE.Mesh(tubeGeo, tubeMat);
+  scene.add(trackLine);
+
+  let maxY = 0;
+  trackPoints.forEach(p => { if(p.y > maxY) maxY = p.y; });
+  document.getElementById('st-maxy').innerText = `${maxY.toFixed(1)} m`;
+  document.getElementById('st-len').innerText = `${(trackPoints.length * 10).toFixed(0)} m`;
+
+  window.updateTrainToStart();
+}
+
+window.updateTrainToStart = function() {
+  if (trackPoints.length > 1) {
+    const curve = new THREE.CatmullRomCurve3(trackPoints);
+    const point = curve.getPointAt(0);
+    const tangent = curve.getTangentAt(0);
+    trainMesh.position.copy(point);
+    trainMesh.lookAt(point.clone().add(tangent));
+  }
+}
+
+window.getLatestPoint = function() {
+  return trackPoints[trackPoints.length - 1].clone();
+}
+
+window.pushPoint = function(pt) {
+  trackPoints.push(pt);
+  window.rebuildTrackMesh();
+}
+
+window.resetTracks = function() {
+  trackPoints = [
+    new THREE.Vector3(0, 10, 0),
+    new THREE.Vector3(20, 15, 0)
+  ];
+  window.rebuildTrackMesh();
+  isSimulating = false;
+  trainProgress = 0;
+  document.getElementById('btnSim').innerText = "▶ 放行雲霄飛車測試";
+  document.getElementById('st-safe').innerText = "良好";
+  document.getElementById('st-safe').style.color = "#a6e3a1";
+}
+
+window.toggleSimulation = function() {
+  if(trackPoints.length < 2) return;
+  
+  if (!isSimulating) {
+    trainProgress = 0;
+    isSimulating = true;
+    document.getElementById('btnSim').innerText = "⏹ 測試行駛中...";
+  } else {
+    isSimulating = false;
+    trainProgress = 0;
+    window.updateTrainToStart();
+    document.getElementById('btnSim').innerText = "▶ 放行雲霄飛車測試";
+  }
+}
+
+// 1. JSON 匯出功能
+window.downloadTrackData = function() {
+  if (trackPoints.length < 2) {
+    alert("目前沒有可導出的軌道數據！");
+    return;
+  }
+  const trackData = {
+    coordinates: trackPoints.map(p => ({ x: p.x, y: p.y, z: p.z }))
+  };
+  const jsonStr = JSON.stringify(trackData, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Math_Coaster_Track_${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+// 2. JSON 讀取功能
+window.loadTrackData = function(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.coordinates && Array.isArray(data.coordinates)) {
+        trackPoints = data.coordinates.map(p => new THREE.Vector3(p.x, p.y, p.z));
+        window.rebuildTrackMesh();
+        alert("軌道存檔讀取成功！點擊▶放行即可測試行駛。");
+      } else {
+        alert("無效的軌道數據格式！");
+      }
+    } catch (err) {
+      alert("檔案讀取失敗，請確認是否為有效的 .json 檔案。");
+    }
+  };
+  reader.readAsText(file);
+};
+
+// 3. 匯出含有「走動 Keyframe 動畫」的 3D 模型 (.glb)
+window.download3DModelWithAnim = function() {
+  if (!trackLine || trackPoints.length < 2) {
+    alert("請先構建軌道後再進行 3D 模型匯出！");
+    return;
+  }
+
+  const curve = new THREE.CatmullRomCurve3(trackPoints);
+  const sampleCount = 100;
+  const duration = 10;
+  
+  const times = [];
+  const posValues = [];
+  const rotValues = [];
+
+  const tempMesh = new THREE.Object3D();
+
+  for (let i = 0; i <= sampleCount; i++) {
+    const t = i / sampleCount;
+    times.push(t * duration);
+
+    const pt = curve.getPointAt(t);
+    const tangent = curve.getTangentAt(t);
+
+    posValues.push(pt.x, pt.y, pt.z);
+
+    tempMesh.position.copy(pt);
+    tempMesh.lookAt(pt.clone().add(tangent));
+    rotValues.push(tempMesh.quaternion.x, tempMesh.quaternion.y, tempMesh.quaternion.z, tempMesh.quaternion.w);
+  }
+
+  const posTrack = new THREE.VectorKeyframeTrack('CoasterTrain.position', times, posValues);
+  const rotTrack = new THREE.QuaternionKeyframeTrack('CoasterTrain.quaternion', times, rotValues);
+  const clip = new THREE.AnimationClip('CoasterDriveAnimation', duration, [posTrack, rotTrack]);
+
+  const rootScene = new THREE.Group();
+  rootScene.name = "Scene";
+
+  const exportTrack = trackLine.clone();
+  exportTrack.name = "CoasterTrack";
+  rootScene.add(exportTrack);
+
+  const exportTrain = trainMesh.clone();
+  exportTrain.name = "CoasterTrain";
+  rootScene.add(exportTrain);
+
+  rootScene.animations = [clip];
+
+  const exporter = new GLTFExporter();
+  exporter.parse(
+    rootScene,
+    function (gltf) {
+      const blob = new Blob([gltf], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Math_Coaster_Animated_${Date.now()}.glb`;
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+    function (error) {
+      console.error('模型動畫匯出失敗：', error);
+    },
+    { 
+      binary: true,
+      animations: [clip]
+    }
+  );
+};
+
+window.addEventListener('resize', () => {
+  const container = document.getElementById('viewport-container');
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+init3D();
+</script>
+
+<script>
+function switchTab(evt, tabId) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.control-section').forEach(sec => sec.classList.remove('active'));
+  
+  evt.currentTarget.classList.add('active');
+  document.getElementById(`tab-${tabId}`).classList.add('active');
+}
+
+document.getElementById('slider-m').oninput = (e) => document.getElementById('m-val').innerText = e.target.value;
+document.getElementById('slider-l1').oninput = (e) => document.getElementById('l-val').innerText = e.target.value;
+document.getElementById('slider-a').oninput = (e) => document.getElementById('a-val').innerText = e.target.value;
+document.getElementById('slider-h').oninput = (e) => document.getElementById('h-val').innerText = e.target.value;
+document.getElementById('slider-k').oninput = (e) => document.getElementById('k-val').innerText = e.target.value;
+document.getElementById('slider-A').oninput = (e) => document.getElementById('A-val').innerText = e.target.value;
+document.getElementById('slider-B').oninput = (e) => document.getElementById('B-val').innerText = e.target.value;
+document.getElementById('slider-alpha').oninput = (e) => document.getElementById('alpha-val').innerText = `${e.target.value}°`;
+document.getElementById('slider-beta').oninput = (e) => document.getElementById('beta-val').innerText = `${e.target.value}°`;
+
+function addLinearTrack() {
+  const m = parseFloat(document.getElementById('slider-m').value);
+  const len = parseFloat(document.getElementById('slider-l1').value);
+  const lastPt = window.getLatestPoint();
+
+  for(let x = 5; x <= len; x += 5) {
+    const newY = lastPt.y + m * x;
+    window.pushPoint(new THREE.Vector3(lastPt.x + x, Math.max(2, newY), lastPt.z));
+  }
+}
+
+function addQuadTrack() {
+  const a = parseFloat(document.getElementById('slider-a').value);
+  const h = parseFloat(document.getElementById('slider-h').value);
+  const k = parseFloat(document.getElementById('slider-k').value);
+  const lastPt = window.getLatestPoint();
+
+  if (Math.abs(a) > 0.12) {
+    document.getElementById('st-safe').innerText = "危險 (G力過大)";
+    document.getElementById('st-safe').style.color = "#f38ba8";
+  }
+
+  for (let x = 2; x <= h * 2; x += 4) {
+    const relativeY = a * Math.pow(x - h, 2) + k - (a * Math.pow(-h, 2));
+    
+    window.pushPoint(new THREE.Vector3(
+      lastPt.x + x, 
+      Math.max(2, lastPt.y + relativeY), 
+      lastPt.z
+    ));
+  }
+}
+
+function addTrigTrack() {
+  const A = parseFloat(document.getElementById('slider-A').value);
+  const B = parseFloat(document.getElementById('slider-B').value);
+  const trigType = document.getElementById('select-trig-type').value;
+  const lastPt = window.getLatestPoint();
+
+  for (let x = 2; x <= 60; x += 3) {
+    let y = 0;
+
+    if (trigType === 'sin') {
+      y = A * Math.sin(B * x);
+    } else if (trigType === 'cos') {
+      y = A * Math.cos(B * x);
+    } else if (trigType === 'tan') {
+      const tanVal = Math.tan((B * x) % (Math.PI / 2.2));
+      y = A * Math.min(Math.max(tanVal, -3), 3);
+    }
+
+    window.pushPoint(new THREE.Vector3(
+      lastPt.x + x, 
+      Math.max(2, lastPt.y + y), 
+      lastPt.z
+    ));
+  }
+}
+
+function addGeoTrack() {
+  const alpha = parseFloat(document.getElementById('slider-alpha').value) * Math.PI / 180;
+  const beta = parseFloat(document.getElementById('slider-beta').value) * Math.PI / 180;
+  const formulaType = document.getElementById('select-geo-formula').value;
+  const lastPt = window.getLatestPoint();
+  const r = 30;
+
+  let calculatedVal = 0;
+
+  switch(formulaType) {
+    case 'sin_add':
+      calculatedVal = Math.sin(alpha) * Math.cos(beta) + Math.cos(alpha) * Math.sin(beta);
+      break;
+    case 'sin_sub':
+      calculatedVal = Math.sin(alpha) * Math.cos(beta) - Math.cos(alpha) * Math.sin(beta);
+      break;
+    case 'cos_add':
+      calculatedVal = Math.cos(alpha) * Math.cos(beta) - Math.sin(alpha) * Math.sin(beta);
+      break;
+    case 'cos_sub':
+      calculatedVal = Math.cos(alpha) * Math.cos(beta) + Math.sin(alpha) * Math.sin(beta);
+      break;
+  }
+
+  const dx = r * calculatedVal;
+  const dz = r * Math.sin(alpha + beta);
+
+  window.pushPoint(new THREE.Vector3(lastPt.x + dx, lastPt.y + 5, lastPt.z + dz));
+}
+
+// 擴充同義詞庫：多重關鍵字陣列
+const LEXICON = {
+  lost: ["不知道", "沒想法", "接下來", "怎麼做", "卡住", "建議", "提示", "下一步", "無頭緒", "幹嘛", "靈感", "救我", "幫我", "怎麼玩", "卡關", "不懂"],
+  danger: ["危險", "甩出", "太快", "可怕", "翻車", "撞到", "安全", "g力", "過陡", "痛", "死", "飛出去", "太斜"],
+  height: ["高", "落差", "俯衝", "爬升", "山丘", "高空", "頂點", "下降", "低", "谷底", "斜率"],
+  wave: ["波浪", "海浪", "起伏", "震盪", "波峰", "正弦", "餘弦", "sin", "cos", "tan", "顛簸"],
+  turn: ["轉灣", "轉彎", "方向", "角度", "和角", "轉向", "迴轉", "拐彎", "彎道", "弧度"]
+};
+
+// 隨機開場與問候語
+const GREETINGS = [
+  "收到！讓我幫你分析一下目前的軌道佈局... 🔍",
+  "沒問題，讓我這個工程師幫你看一下！ 🛠️",
+  "了解，正在精算你目前的 3D 物理數據... 📐",
+  "明白！我們來看看怎麼讓這座雲霄飛車更厲害 🎢"
+];
+
+function sendAiMessage() {
+  const input = document.getElementById('aiInput');
+  const msg = input.value.trim();
+  
+  appendChat(msg || "（請求 AI 提示與軌道診斷）", 'user');
+  input.value = '';
+
+  setTimeout(() => {
+    const reply = analyzeTextAndTrack(msg);
+    appendChat(reply, 'ai');
+    if (window.MathJax) MathJax.typesetPromise();
+  }, 400);
+}
+
+// 具備加權評分與 dynamic 3D 狀態組合的智慧解析器
+function analyzeTextAndTrack(userQuery) {
+  const text = userQuery.toLowerCase().trim();
+
+  // 1. 數據擷取與狀態判定
+  const points = window.trackPoints || [];
+  const pointCount = points.length;
+  const lastPoint = pointCount > 0 ? points[pointCount - 1] : { x: 0, y: 10, z: 0 };
+  
+  let maxY = 0;
+  let totalLength = 0;
+  for (let i = 0; i < points.length; i++) {
+    if (points[i].y > maxY) maxY = points[i].y;
+    if (i > 0) totalLength += points[i].distanceTo(points[i - 1]);
+  }
+  const currentStatus = document.getElementById('st-safe')?.innerText || "良好";
+
+  // 2. 數值提取（例如抓取 50m, 100 等數字）
+  const numberMatches = userQuery.match(/\d+(\.\d+)?/g);
+  const targetNumber = numberMatches ? parseFloat(numberMatches[0]) : null;
+
+  // 3. 多重意圖加權評分 (Weight Scoring System)
+  const score = { lost: 0, danger: 0, height: 0, wave: 0, turn: 0 };
+  
+  Object.keys(LEXICON).forEach(category => {
+    LEXICON[category].forEach(kw => {
+      if (text.includes(kw)) score[category] += 1;
+    });
+  });
+
+  const greeting = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
+
+  // 4. 根據最高分意圖與 3D 現況靈活分流
+
+  // 【情境 A】：玩家提及具體數值 (例如：做個 60 米高的)
+  if (targetNumber !== null && (text.includes("米") || text.includes("公尺") || text.includes("高") || text.includes("長") || score.height > 0)) {
+    if (targetNumber > 80) {
+      return `${greeting}<br>你想挑戰 **${targetNumber}m** 的超高極限！目前軌道最高點只有 **${maxY.toFixed(1)}m**。<br>👉 **建議**：切換到【二次函數】，把頂點高度 $k$ 直接拉到 **${targetNumber}**，開口 $a$ 設為 **-0.03**，就能造出超震撼的大俯衝！`;
+    } else {
+      return `${greeting}<br>收到目標數值 **${targetNumber}m**！<br>👉 **建議**：切換到【一次函數】，斜率 $m$ 設為 **0.6**，長度設為 **${(targetNumber / 0.6).toFixed(0)}m**，即可精準爬升到此高度。`;
+    }
+  }
+
+  // 【情境 B】：安全/危險/G力 相關問題
+  if (score.danger > 0 || currentStatus.includes("危險")) {
+    if (currentStatus.includes("危險")) {
+      return `${greeting}<br>⚠️ **警告**：目前軌道 $G$ 力過大！過彎或俯衝太急促了。<br>👉 **修復方案**：將【二次函數】的開口 $|a|$ 數值調小（建議小於 **0.08**），這能加大轉灣半徑，讓乘客安全過關！`;
+    } else {
+      return `${greeting}<br>✅ 目前軌道非常安全（最高點 **${maxY.toFixed(1)}m**）。如果你想再刺激一點，可以嘗試加入【三角函數】波浪段，或是加大俯衝角度！`;
+    }
+  }
+
+  // 【情境 C】：造型特徵詢問（波浪或轉彎）
+  if (score.wave > score.turn && score.wave > 0) {
+    return `${greeting}<br>🌊 想製作起伏的波浪道嗎？<br>👉 切換到【三角函數】，選擇 $y = A \\sin(Bx)$，把振幅 $A$ 設為 **15**、頻率 $B$ 設為 **0.1**，就可以創造連續失重感！`;
+  }
+
+  if (score.turn > 0) {
+    return `${greeting}<br>🔄 想進行 3D 空間轉向？<br>👉 切換到【和差角/定理】，設定進場角 $\\alpha = 30^\\circ$ 與修正角 $\\beta = 15^\\circ$，系統會自動用 $\\cos(\\alpha + \\beta)$ 算出的投影量引導軌道轉灣！`;
+  }
+
+  // 【情境 D】：迷惘/沒想法/未填寫文字 (根據 3D 場景狀態彈性給予提案)
+  if (score.lost > 0 || text === "" || text.length < 2) {
+    if (pointCount <= 3) {
+      return `${greeting}<br>看來還剛起步！這裡有三個建構靈感：<br>1️⃣ **一次函數**：先用斜率 $m=0.8$ 拉一段高空爬升。<br>2️⃣ **二次函數**：用 $a=-0.05, k=30$ 造一個大山丘。<br>3️⃣ **三角函數**：用正弦波造型直接做起伏開局！`;
+    }
+    if (lastPoint.y >= 25) {
+      return `${greeting}<br>我看你剛把軌道拉到高處（目前高度 **${lastPoint.y.toFixed(1)}m**）！<br>👉 最棒的接續方式是切換到【二次函數】，將 $a=-0.05, k=30$，來一記大落差俯衝谷底！`;
+    }
+    if (lastPoint.y < 25 && totalLength < 250) {
+      return `${greeting}<br>軌道目前在平緩區（高度 **${lastPoint.y.toFixed(1)}m**，總長 **${totalLength.toFixed(0)}m**）。<br>👉 可以切換到【三角函數】做連續波浪，或是用【一次函數】（$m=0.6$）再次爬升蓄積重力位能！`;
+    }
+    return `${greeting}<br>你的軌道已經很有規模囉（長度 **${totalLength.toFixed(0)}m**）！<br>👉 可以用【和差角/定理】做大幅度轉灣引導回到原點，或是直接點擊下方「▶ 放行雲霄飛車測試」觀看成果！`;
+  }
+
+  // 【情境 E】：泛用對話回應 (自動結合 context)
+  return `${greeting}<br>關於「${userQuery}」，我建議這樣做：<br>• 目前末端高度為 **${lastPoint.y.toFixed(1)}m**，最高點 **${maxY.toFixed(1)}m**。<br>• 若想增添變化，可以直接切換左側分頁（一次函數/二次函數/三角函數/和差角），調整參數後點擊「拼接軌道」！`;
+}
+
+function appendChat(text, sender) {
+  const box = document.getElementById('aiChat');
+  const msgDiv = document.createElement('div');
+  msgDiv.className = `chat-msg ${sender}`;
+  msgDiv.innerHTML = text;
+  box.appendChild(msgDiv);
+  box.scrollTop = box.scrollHeight;
+}
+
+function handleKeyPress(e) {
+  if(e.key === 'Enter') sendAiMessage();
+}
+</script>
+
+</body>
+</html>

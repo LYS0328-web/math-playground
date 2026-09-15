@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>高職數學-二次函數 (Quadratic Functions)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+body { 
+  margin: 0; 
+  font-family: 'Share Tech Mono', 'Segoe UI', sans-serif; 
+  background: #1e222a; 
+  color: #bac2de; 
+  font-size: 18px;
+  overflow-x: hidden;
+}
+
+/* 導覽列 */
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: rgba(30, 34, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(137, 180, 250, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  height: 50px;
+  line-height: 50px;
+}
+.navbar a { 
+  float: left; 
+  color: #89b4fa; 
+  padding: 0 20px; 
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 5px rgba(137, 180, 250, 0.3);
+  transition: 0.3s;
+}
+.navbar a:hover { 
+  background: rgba(137, 180, 250, 0.1); 
+  color: #cdd6f4;
+}
+.dropdown { float: left; }
+.dropbtn { 
+  background: none; border: none; color: #89b4fa; padding: 0 20px; cursor: pointer; 
+  font-size: 16px; line-height: 50px; font-family: 'Share Tech Mono', monospace;
+  text-shadow: 0 0 5px rgba(137, 180, 250, 0.3);
+}
+.dropdown-content {
+  display: none; position: absolute; background: rgba(20, 23, 30, 0.95);
+  border: 1px solid rgba(137, 180, 250, 0.2);
+  min-width: 180px; border-radius: 0 0 8px 8px; overflow: hidden;
+}
+.dropdown-content a { display: block; padding: 12px 20px; color: #7dcfff; }
+.dropdown-content a:hover { background: rgba(125, 207, 255, 0.15); color: #ffffff; }
+.dropdown:hover .dropdown-content { display: block; }
+
+/* 3D 模擬主視窗 */
+#track-container { 
+  width: 100%; height: 55vh; margin-top: 50px; 
+  border-bottom: 2px solid rgba(125, 207, 255, 0.4); 
+  background: #111318;
+  position: relative;
+}
+
+/* 頂部 HUD 狀態面板 */
+#hud-display {
+  position: absolute; top: 20px; right: 20px; background: rgba(20, 23, 30, 0.9); 
+  border: 1px solid #7dcfff; padding: 12px 20px; border-radius: 6px; font-family: 'Orbitron', sans-serif; z-index: 500;
+  box-shadow: 0 0 15px rgba(125, 207, 255, 0.2);
+}
+
+/* 核心內容區 */
+#lesson { 
+  padding: 30px 20px; 
+  max-width: 1300px; 
+  margin: 0 auto; 
+}
+
+h1, h2, h3 { 
+  color: #89b4fa; 
+  font-family: 'Orbitron', sans-serif;
+  text-shadow: 0 0 8px rgba(137, 180, 250, 0.3); 
+}
+h1 { border-left: 4px solid #00ffff; padding-left: 12px; margin-top: 35px; color: #cdd6f4; font-size: 26px;}
+
+ul { padding-left: 20px; color: #a6adc8; }
+li { margin-bottom: 10px; line-height: 1.6; }
+
+/* 排版與卡片 */
+.lesson-row {
+  display: flex;
+  gap: 25px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.panel-main { flex: 2 1 600px; }
+.panel-side { flex: 1 1 350px; }
+
+.data-card {
+  background: rgba(30, 34, 42, 0.6);
+  border: 1px solid rgba(137, 180, 250, 0.15);
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* 控制台與高亮 */
+.control-console {
+  background: rgba(20, 23, 30, 0.85);
+  border-left: 4px solid #00ffff;
+  padding: 20px;
+  border-radius: 6px;
+  margin-top: 15px;
+}
+
+input[type=range] {
+  width: 100%; accent-color: #00ffff; cursor: pointer; margin: 12px 0;
+}
+.value-highlight { color: #00ffff; font-weight: bold; text-shadow: 0 0 8px rgba(0, 255, 255, 0.4); }
+.angle-display { font-family: 'Orbitron', sans-serif; font-size: 18px; color: #bb9af7; }
+
+/* SVG 樣式 */
+svg { 
+  background: rgba(20, 23, 30, 0.5);
+  border: 1px solid rgba(137, 180, 250, 0.15);
+  border-radius: 8px;
+}
+
+/* 最下方遊戲區 - 拋物線彈道師 */
+#game-island-section {
+  min-height: 100vh; background: radial-gradient(circle at center, #1a1d24 0%, #0f1115 100%);
+  border-top: 3px dashed rgba(0, 255, 255, 0.3); padding: 60px 20px; box-sizing: border-box;
+}
+.island-map-title { text-align: center; margin-bottom: 50px; }
+.island-map-title h2 { font-size: 32px; color: #cdd6f4; }
+
+.island-container { display: flex; justify-content: center; align-items: center; gap: 40px; max-width: 1200px; margin: 0 auto; flex-wrap: wrap; }
+.island-card {
+  background: rgba(30, 34, 42, 0.85); border: 2px solid rgba(137, 180, 250, 0.2); border-radius: 16px;
+  width: 320px; padding: 35px 25px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.4); transition: 0.4s;
+}
+#island-1 { transform: translateY(-20px); }
+#island-2 { transform: translateY(30px); }
+#island-3 { transform: translateY(-10px); }
+
+.island-card.active { border-color: #7dcfff; box-shadow: 0 0 20px rgba(125, 207, 255, 0.2); }
+.island-card.current-stay { border-color: #00ffff; box-shadow: 0 0 30px rgba(0, 255, 255, 0.5); transform: scale(1.05) !important; }
+.island-card.locked { opacity: 0.25; cursor: not-allowed; transform: translateY(0) !important; }
+
+.island-icon { font-size: 50px; display: inline-block; margin-bottom: 15px; }
+.btn-enter-mission {
+  margin-top: 20px; padding: 12px 28px; background: transparent; border: 1px solid #7dcfff; color: #7dcfff; 
+  font-family: 'Orbitron'; border-radius: 4px; cursor: pointer; transition: 0.3s; width: 100%;
+}
+.island-card.active .btn-enter-mission:hover { background: #7dcfff; color: #1e222a; font-weight: bold; }
+.island-card.current-stay .btn-enter-mission { border-color: #00ffff; color: #00ffff; }
+
+/* 遊戲彈窗 */
+.game-modal {
+  display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 95%; max-width: 650px; background: rgba(20, 23, 30, 0.98); border: 2px solid #00ffff;
+  border-radius: 12px; padding: 25px; z-index: 2000; box-shadow: 0 0 50px rgba(0,255,255,0.3);
+}
+.modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.78); z-index:1999; backdrop-filter: blur(5px); }
+.btn-action { background: #00ffff; color: #1e222a; font-family: 'Orbitron'; font-weight: bold; border: none; padding: 12px 30px; cursor: pointer; margin-top: 15px; border-radius: 4px; width: 100%; font-size: 16px; transition: 0.2s;}
+.btn-action:hover { background: #7dcfff; box-shadow: 0 0 15px rgba(0,255,255,0.6); }
+.btn-close { background: transparent; color: #aaa; border: 1px solid #444; padding: 8px 15px; margin-top: 10px; cursor: pointer; border-radius: 4px; width: 100%; }
+
+.input-group { margin: 10px 0; text-align: left; }
+.input-group label { display: block; font-size: 14px; color: #89b4fa; margin-bottom: 5px; }
+.input-field { width: 100%; padding: 10px; background: rgba(0,0,0,0.4); border: 1px solid #7dcfff; color: #00ffff; font-family: 'Orbitron', monospace; font-size: 16px; border-radius: 4px; }
+
+.cart-animation { transition: all 1.2s cubic-bezier(0.25, 0.1, 0.25, 1); }
+</style>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+
+<div class="navbar">
+  <a href="#" onclick="location.href='index.html'"> 首頁 </a>
+  <div class="dropdown">
+    <button class="dropbtn">數學資料庫 ▼</button>
+    <div class="dropdown-content">
+      <a href="#" onclick="location.href='1-sct-homepage.html'">> 三角函數</a>
+      <a href="#" onclick="location.href='1-lf-homepage.html'">> 線性函數</a>
+      <a href="#" onclick="location.href='game-homepage.html'">> 鐵道系統</a>
+    </div>
+  </div>
+</div>
+
+<!-- 頂部 3D 雲霄飛車模擬器 -->
+<div id="track-container">
+  <div id="hud-display">
+    <div style="font-size: 11px; color: #bb9af7; letter-spacing: 2px; font-weight: bold;">QUADRATIC VECTOR CORE</div>
+    <div style="font-size: 16px; margin: 5px 0; color: #fff;">LOCATION: <span id="hud-loc" style="color: #00ffff;">STATION 01</span></div>
+    <div style="font-size: 13px; color: #7dcfff;">PARABOLA CURVE: <span id="hud-slope" style="color:#a6e3a1;">a = +1.00</span></div>
+  </div>
+</div>
+
+<!-- 核心教學區：二次函數 -->
+<div id="lesson">
+
+  <!-- 01_ 觀念建立：頂點與開口方向 -->
+  <div class="lesson-row">
+    <div class="panel-main">
+      <div class="data-card">
+        <h1>01_ 核心概念：二次函數與拋物線頂點</h1>
+        <p>二次函數在坐標平面上的圖形是一條「拋物線」。拋物線最重要的幾何特徵在於<b>開口方向</b>與<b>極值點（頂點）</b>。</p>
+        <ul>
+          <li>
+            <strong class="value-highlight">開口方向 (a)：</strong>
+            \( a > 0 \) 時開口向上（存在最小值）；\( a < 0 \) 時開口向下（存在最大值）。
+          </li>
+          <li>
+            <strong class="value-highlight">頂點式形態：</strong>
+            標準式為 <span style="color:#00ffff; font-size:20px; font-weight:bold;">\( y = a(x - h)^2 + k \)</span>，其頂點坐標直接可讀出為 \((h, k)\)。
+          </li>
+          <li>
+            <strong class="value-highlight">對稱軸：</strong>
+            直線 \( x = h \) 為拋物線的左右對稱軸。
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="panel-side">
+      <div class="data-card" style="text-align: center;">
+        <h3>拋物線開口與頂點感測器</h3>
+        <svg width="100%" height="220" viewBox="0 0 350 200">
+          <line x1="30" y1="160" x2="320" y2="160" stroke="#3b4261" stroke-width="2"/>
+          <line x1="175" y1="30" x2="175" y2="180" stroke="#3b4261" stroke-width="2"/>
+          <!-- 示意拋物線 -->
+          <path d="M 55 50 Q 175 220 295 50" fill="none" stroke="#00ffff" stroke-width="4"/>
+          <circle cx="175" cy="160" r="5" fill="#ff0055"/>
+          <text x="110" y="40" fill="#a6e3a1" font-weight="bold" font-family="Orbitron">頂點 V(h, k)</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02_ 動態調校控制台 -->
+  <h1>02_ 互動實驗：調校頂點式參數 a, h, k</h1>
+  <div class="lesson-row">
+    <div class="panel-main">
+      <div class="data-card">
+        <h3>二次函數頂點式控制台：\( y = a(x - h)^2 + k \)</h3>
+        <p style="color:#a6adc8; margin: 0;">拖曳下方滑桿，觀察拋物線開口大小、方向及頂點 \((h, k)\) 的平移變化：</p>
+        
+        <div class="control-console">
+          <div class="angle-display">開口係數 a = <span id="aValueDisplay" class="value-highlight">1.00</span></div>
+          <input type="range" id="aSlider" min="-2" max="2" step="0.1" value="1">
+
+          <div class="angle-display" style="margin-top:10px;">水平位移 h = <span id="hValueDisplay" class="value-highlight">0.00</span></div>
+          <input type="range" id="hSlider" min="-5" max="5" step="0.5" value="0">
+
+          <div class="angle-display" style="margin-top:10px;">垂直位移 k = <span id="kValueDisplay" class="value-highlight">0.00</span></div>
+          <input type="range" id="kSlider" min="-50" max="50" step="5" value="0">
+
+          <p style="margin: 15px 0 0 0; line-height: 1.8; font-family: monospace; font-size: 18px;">
+            &gt; 函數方程式：<span id="equationDisplay" style="color:#00ffff; font-weight:bold;">y = 1.00(x - 0.00)² + 0.00</span><br>
+            &gt; 頂點坐標 V：(<span id="hDisplay" style="color:#bb9af7;">0.00</span>, <span id="kDisplay" style="color:#bb9af7;">0.00</span>)
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-side">
+      <div class="data-card" style="text-align: center;">
+        <h3>2D 拋物線即時連動</h3>
+        <svg id="interactiveGraph" width="100%" height="240" viewBox="0 0 300 240">
+          <line x1="20" y1="120" x2="280" y2="120" stroke="#3b4261" stroke-width="1.5"/>
+          <line x1="150" y1="20" x2="150" y2="220" stroke="#3b4261" stroke-width="1.5"/>
+          <path id="interactiveParabola" d="M 50 120 Q 150 120 250 120" fill="none" stroke="#00ffff" stroke-width="3"/>
+          <circle id="vertexPoint" cx="150" cy="120" r="5" fill="#ff0055"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- 03_ 高職數學 C 必考型態與配方法 -->
+  <h1>03_ 統測重點：一般式配方與極值應用</h1>
+  <div class="lesson-row">
+    <div class="panel-main">
+      <div class="data-card">
+        <h3>高職數學 C 必考三大重點公式</h3>
+        <ul>
+          <li><p><strong class="value-highlight">一般式轉換配方法：\( y = ax^2 + bx + c \)</strong><br>利用配方法改寫為頂點式：頂點 \( x \) 坐標為 <span style="color:#00ffff;">\( x = -\frac{b}{2a} \)</span>。</p></li>
+          <li><p><strong class="value-highlight">極值公式：</strong><br>當 \( a > 0 \)，在 \( x = -\frac{b}{2a} \) 處有<b>最小值</b> \( \frac{4ac - b^2}{4a} \)；<br>當 \( a < 0 \)，在 \( x = -\frac{b}{2a} \) 處有<b>最大值</b>。</p></li>
+          <li><p><strong class="value-highlight">判別式與 x 軸交點：\( D = b^2 - 4ac \)</strong><br>\( D > 0 \) 相交兩點；\( D = 0 \) 相切一點（頂點在 x 軸上）；\( D < 0 \) 浮空無交點。</p></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="panel-side">
+      <div class="data-card">
+        <h3>極值求解範例</h3>
+        <p style="font-size:15px; color:#a6adc8;">
+          若雲霄飛車的軌道高度可以用二次函數表示：
+        </p>
+        <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:6px; font-family:monospace; color:#00ffff; font-size:15px;">
+          f(x) = -x² + 6x + 10<br><br>
+          配方後：<br>
+          f(x) = -(x - 3)² + 19<br><br>
+          ➔ 當 x = 3 時，軌道達到最高點 19 米。
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 下方遊戲島嶼區：拋物線彈道師 -->
+<section id="game-island-section">
+  <div class="island-map-title">
+    <h2>MISSION PROTOCOL : 【拋物線彈道師】實戰演練</h2>
+    <p style="color: #a6adc8; max-width:800px; margin:0 auto;">
+      運用剛剛學會的「二次函數頂點式」、「配方法」與「極值」，為補給車計算拋物線彈道與過山車弧線！
+    </p>
+  </div>
+
+  <div class="island-container">
+    <div class="island-card active current-stay" id="island-1">
+      <span class="island-icon">🎯</span>
+      <h3>關卡 01 . 頂點高空過山車</h3>
+      <p style="font-size: 14px; color: #a6adc8;">
+      拋物線軌道最高點落在 V(3, 8)<br>
+      且已知開口係數 a = -1，請計算<span style="color:#00ffff; font-weight:bold;">當 x = 5 時的高度 y</span>。
+      </p>
+      <button class="btn-enter-mission" id="btn-island-1" onclick="openMission(1)">開啟軌道鎖</button>
+    </div>
+
+    <div class="island-card locked" id="island-2">
+      <span class="island-icon">⚡</span>
+      <h3>關卡 02 . 配方法彈道重組</h3>
+      <p style="font-size: 14px; color: #a6adc8;">
+      軌道方程式為 y = x² - 8x + 20<br>
+      請透過配方法找出<span style="color:#89b4fa; font-weight:bold;">最低點 (頂點 x 坐標)</span>。
+      </p>
+      <button class="btn-enter-mission" id="btn-island-2" onclick="openMission(2)" disabled>密碼鎖定中</button>
+    </div>
+
+    <div class="island-card locked" id="island-3">
+      <span class="island-icon">🏔️</span>
+      <h3>關卡 03 . 跨峽谷拱橋計算</h3>
+      <p style="font-size: 14px; color: #a6adc8;">
+      補給車需越過寬度 10 的峽谷，<br>
+      軌道為 y = -0.2(x - 5)² + k，若要讓最高點達到 5，<br>
+      請設定<span style="color:#a6e3a1; font-weight:bold;">垂直偏移 k 值</span>。
+      </p>
+      <button class="btn-enter-mission" id="btn-island-3" onclick="openMission(3)" disabled>密碼鎖定中</button>
+    </div>
+  </div>
+</section>
+
+<!-- 遊戲 Modal 視窗 -->
+<div class="modal-overlay" id="modalOverlay"></div>
+<div class="game-modal" id="gameModal">
+  <h2 id="modalTitle">關卡任務控制台</h2>
+  <p id="modalDesc" style="font-size: 15px; color: #a6adc8; margin-bottom: 15px;"></p>
+  
+  <div style="text-align:center; margin: 15px 0;">
+    <svg id="modalGameCanvas" width="100%" height="220" viewBox="0 0 400 220" style="background:rgba(0,0,0,0.5); border:1px solid #00ffff;">
+      <!-- 動態畫布區 -->
+    </svg>
+  </div>
+
+  <div id="modalControls" class="control-console" style="background: rgba(0,0,0,0.3); padding:15px;">
+    <!-- 動態生成輸入欄位 -->
+  </div>
+
+  <button class="btn-action" id="modalActionBtn" onclick="verifyMissionSolution()">驗證算式並發射補給車</button>
+  <button class="btn-close" onclick="closeMission()">關閉</button>
+</div>
+
+<!-- Three.js 載入 -->
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// --- 全局 UI 與 DOM 元素 ---
+const aSlider = document.getElementById('aSlider');
+const hSlider = document.getElementById('hSlider');
+const kSlider = document.getElementById('kSlider');
+const aValueDisplay = document.getElementById('aValueDisplay');
+const hValueDisplay = document.getElementById('hValueDisplay');
+const kValueDisplay = document.getElementById('kValueDisplay');
+const equationDisplay = document.getElementById('equationDisplay');
+const hDisplay = document.getElementById('hDisplay');
+const kDisplay = document.getElementById('kDisplay');
+const interactiveParabola = document.getElementById('interactiveParabola');
+const vertexPoint = document.getElementById('vertexPoint');
+const hudSlope = document.getElementById('hud-slope');
+const hudLoc = document.getElementById('hud-loc');
+
+// --- 3D 雲霄飛車場景 ---
+const container = document.getElementById('track-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xfba58c);
+scene.fog = new THREE.Fog(0xfba58c, 2000, 8000);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+container.appendChild(renderer.domElement);
+
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth/container.clientHeight, 1, 20000);
+camera.position.set(0, 1000, 2500);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+
+scene.add(new THREE.AmbientLight(0xcdd6f4, 0.4));
+const dirLight = new THREE.DirectionalLight(0xffd1a4, 2.0);
+dirLight.position.set(1000, 2000, 1000);
+scene.add(dirLight);
+
+const trainLight = new THREE.PointLight(0x00ffff, 400000, 1800);
+scene.add(trainLight);
+
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(20000, 20000), new THREE.MeshStandardMaterial({ color: 0x34495e, roughness: 0.8 }));
+ground.rotation.x = -Math.PI / 2;
+scene.add(ground);
+const gridHelper = new THREE.GridHelper(20000, 100, 0x3b4261, 0x1a1d24);
+scene.add(gridHelper);
+
+let curve, frames;
+const trackGroup = new THREE.Group();
+scene.add(trackGroup);
+const numSamples = 1000;
+
+// --- 重構後的 3D 拋物線軌道生成函數 ---
+function buildDynamicLinearTrack(aVal, hVal, kVal) {
+  while(trackGroup.children.length > 0) {
+    trackGroup.remove(trackGroup.children[0]);
+  }
+
+  const pts = [];
+  const totalPoints = 100;
+
+  // 沿著 X 軸帶入二次函數頂點式：y = a(x - h)^2 + k
+  for(let i = 0; i <= totalPoints; i++) {
+    const xMath = -12 + (i / totalPoints) * 24; // 對應數學 x 範圍
+    const posX = xMath * 120; // 3D 空間 X 座標
+    const posZ = 0;           // 主軌道維持在 Z 平面
+
+    // 依二次函數計算高程 Y
+    const yMath = aVal * Math.pow(xMath - hVal, 2) + (kVal / 5);
+    const posY = Math.max(20, 400 + yMath * 25); // 基底保護，防墜入地面
+
+    pts.push(new THREE.Vector3(posX, posY, posZ));
+  }
+
+  curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+  frames = curve.computeFrenetFrames(numSamples, false);
+
+  const railMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.2 });
+
+  // 建立雙軌
+  for (let offset of [20, -20]) {
+    const rPts = [];
+    for (let j = 0; j <= numSamples; j++) {
+      rPts.push(curve.getPointAt(j / numSamples).add(frames.binormals[j].clone().multiplyScalar(offset)));
+    }
+    trackGroup.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rPts, false), numSamples, 5, 8, false), railMat));
+  }
+
+  // 建立柱子支撐軌道
+  for(let i = 0; i <= numSamples; i += 40) {
+    const p = curve.getPointAt(i / numSamples);
+    const pillar = new THREE.Mesh(new THREE.CylinderGeometry(5, 10, p.y, 6), railMat);
+    pillar.position.set(p.x, p.y / 2, p.z);
+    trackGroup.add(pillar);
+  }
+}
+
+const train = [];
+let progress = 0;
+
+function addCar(isFirst) {
+  const car = new THREE.Mesh(
+    new THREE.BoxGeometry(50, 30, 70), 
+    new THREE.MeshStandardMaterial({ color: 0x1e222a, emissive: isFirst ? 0xd32f2f : 0x795548, emissiveIntensity: isFirst ? 0.9 : 0.4, wireframe: true })
+  );
+  scene.add(car);
+  train.push(car);
+}
+
+for(let i = 0; i < 4; i++) addCar(i === 0);
+
+function updateTrain() {
+  if (!curve) return;
+  train.forEach((car, i) => {
+    const cp = Math.max(0, Math.min(1, progress - i * 0.03));
+    const p = curve.getPointAt(cp);
+    const idx = Math.floor(cp * numSamples);
+
+    car.position.copy(p);
+    if (frames && frames.binormals[idx]) {
+      car.setRotationFromMatrix(new THREE.Matrix4().makeBasis(frames.binormals[idx], frames.normals[idx], frames.tangents[idx]));
+    }
+    car.translateY(20);
+
+    if (i === 0) trainLight.position.copy(car.position).y += 50;
+  });
+}
+
+// --- 2D 控制台與 SVG / 3D 拋物線圖形即時連動 ---
+function updateQuadraticFunction() {
+  const a = parseFloat(aSlider.value);
+  const h = parseFloat(hSlider.value);
+  const k = parseFloat(kSlider.value);
+  
+  aValueDisplay.innerText = a >= 0 ? `+${a.toFixed(2)}` : a.toFixed(2);
+  hValueDisplay.innerText = h >= 0 ? `+${h.toFixed(1)}` : h.toFixed(1);
+  kValueDisplay.innerText = k >= 0 ? `+${k.toFixed(1)}` : k.toFixed(1);
+  
+  const hSign = h >= 0 ? `- ${h.toFixed(1)}` : `+ ${Math.abs(h).toFixed(1)}`;
+  const kSign = k >= 0 ? `+ ${k.toFixed(1)}` : `- ${Math.abs(k).toFixed(1)}`;
+  
+  equationDisplay.innerText = `y = ${a.toFixed(2)}(x ${hSign})² ${kSign}`;
+  hDisplay.innerText = h.toFixed(1);
+  kDisplay.innerText = k.toFixed(1);
+
+  // 2D SVG 拋物線繪製
+  const centerX = 150 + h * 15;
+  const centerY = 120 - k;
+  
+  let pathD = "";
+  for(let x = -100; x <= 100; x += 10) {
+    const svgX = 150 + x;
+    const mathX = (x - h * 15) / 15;
+    const mathY = a * Math.pow(mathX, 2);
+    const svgY = centerY - mathY * 15;
+    
+    if(x === -100) pathD += `M ${svgX} ${svgY} `;
+    else pathD += `L ${svgX} ${svgY} `;
+  }
+
+  interactiveParabola.setAttribute('d', pathD);
+  vertexPoint.setAttribute('cx', centerX);
+  vertexPoint.setAttribute('cy', centerY);
+
+  hudSlope.innerText = `a = ${a >= 0 ? '+' : ''}${a.toFixed(2)} (V: ${h}, ${k})`;
+
+  // 同步連動 3D 軌道
+  buildDynamicLinearTrack(a === 0 ? 0.01 : a, h, k);
+}
+
+aSlider.addEventListener('input', updateQuadraticFunction);
+hSlider.addEventListener('input', updateQuadraticFunction);
+kSlider.addEventListener('input', updateQuadraticFunction);
+
+updateQuadraticFunction();
+
+// --- 遊戲：拋物線關卡邏輯 ---
+let currentActiveMission = 1;
+
+window.openMission = function(id) {
+  if(id !== currentActiveMission) return;
+  document.getElementById("modalOverlay").style.display = "block";
+  document.getElementById("gameModal").style.display = "block";
+
+  const controlsDiv = document.getElementById("modalControls");
+  const svg = document.getElementById("modalGameCanvas");
+  controlsDiv.innerHTML = "";
+
+  if(id === 1) {
+    document.getElementById("modalTitle").innerText = "🎯 關卡 01：頂點高空過山車";
+    document.getElementById("modalDesc").innerHTML = "已知拋物線頂點在 V(3, 8)，方程式為 \( y = -(x - 3)^2 + 8 \)。請計算當列車行駛至 <span style='color:#00ffff;'>x = 5</span> 時的高度 y 值。";
+    
+    controlsDiv.innerHTML = `
+      <div class="input-group">
+        <label>請輸入 x = 5 時對應的 y 高度：</label>
+        <input type="number" id="inputY1" class="input-field" placeholder="例如：4">
+      </div>
+    `;
+    
+    svg.innerHTML = `
+      <line x1="30" y1="180" x2="370" y2="180" stroke="#3b4261" stroke-width="2"/>
+      <line x1="50" y1="20" x2="50" y2="190" stroke="#3b4261" stroke-width="2"/>
+      <path d="M 50 160 Q 170 20 290 160" fill="none" stroke="#00ffff" stroke-width="3" stroke-dasharray="6,6"/>
+      <circle cx="170" cy="40" r="6" fill="#ff0055"/>
+      <text x="150" y="25" fill="#ff0055" font-weight="bold">頂點 V(3, 8)</text>
+
+      <line x1="230" y1="20" x2="230" y2="180" stroke="#bb9af7" stroke-dasharray="4"/>
+      <text x="215" y="195" fill="#bb9af7">x = 5</text>
+
+      <g id="supplyCart" class="cart-animation" transform="translate(40, 150)">
+        <rect x="0" y="0" width="20" height="12" fill="#ff9e3b" rx="2"/>
+        <circle cx="5" cy="12" r="3" fill="#ffffff"/>
+        <circle cx="15" cy="12" r="3" fill="#ffffff"/>
+      </g>
+    `;
+  } 
+  else if(id === 2) {
+    document.getElementById("modalTitle").innerText = "⚡ 關卡 02：配方法極值定位";
+    document.getElementById("modalDesc").innerHTML = "軌道方程式為 \( y = x^2 - 8x + 20 \)。請將其配方成 \( y = (x - h)^2 + k \) 形式，並填入頂點的 <span style='color:#00ffff;'>x 坐標 (h)</span>。";
+    
+    controlsDiv.innerHTML = `
+      <div class="input-group">
+        <label>請輸入頂點的 x 坐標 (h)：</label>
+        <input type="number" id="inputH" class="input-field" placeholder="例如：4">
+      </div>
+    `;
+
+    svg.innerHTML = `
+      <line x1="20" y1="180" x2="380" y2="180" stroke="#3b4261" stroke-width="2"/>
+      <line x1="50" y1="20" x2="50" y2="190" stroke="#7dcfff" stroke-width="2"/>
+      
+      <path d="M 60 40 Q 200 240 340 40" fill="none" stroke="#00ffff" stroke-width="3"/>
+      <circle cx="200" cy="140" r="6" fill="#ff0055"/>
+      <text x="170" y="165" fill="#ff0055" font-weight="bold">最低極值點 (h, 4)</text>
+
+      <g id="supplyCart" class="cart-animation" transform="translate(50, 30)">
+        <rect x="0" y="0" width="20" height="12" fill="#ff9e3b" rx="2"/>
+        <circle cx="5" cy="12" r="3" fill="#ffffff"/>
+        <circle cx="15" cy="12" r="3" fill="#ffffff"/>
+      </g>
+    `;
+  }
+  else if(id === 3) {
+    document.getElementById("modalTitle").innerText = "🏔️ 關卡 03：拱橋幾何架設";
+    document.getElementById("modalDesc").innerHTML = "拱橋軌道公式為 \( y = -0.2(x - 5)^2 + k \)。若要讓拱橋最高點恰好達到 <span style='color:#00ffff;'>y = 5</span> 的高度，垂直偏移量 k 應設定為多少？";
+    
+    controlsDiv.innerHTML = `
+      <div class="input-group">
+        <label>輸入垂直偏移量 k 值：</label>
+        <input type="number" id="inputK" class="input-field" placeholder="例如：5">
+      </div>
+    `;
+
+    svg.innerHTML = `
+      <polygon points="150,140 250,140 250,220 150,220" fill="#0f1115" stroke="#3b4261"/>
+      <text x="175" y="180" fill="#ff0055" font-size="12">峽谷障礙</text>
+
+      <path d="M 40 160 Q 200 20 360 160" fill="none" stroke="#a6e3a1" stroke-width="4"/>
+      <line x1="40" y1="90" x2="360" y2="90" stroke="#ff0055" stroke-dasharray="4"/>
+      <text x="270" y="80" fill="#ff0055" font-size="12">目標高度 y = 5</text>
+
+      <g id="supplyCart" class="cart-animation" transform="translate(30, 150)">
+        <rect x="0" y="0" width="20" height="12" fill="#ff9e3b" rx="2"/>
+        <circle cx="5" cy="12" r="3" fill="#ffffff"/>
+        <circle cx="15" cy="12" r="3" fill="#ffffff"/>
+      </g>
+    `;
+  }
+  
+  if (window.MathJax) {
+    MathJax.typesetPromise();
+  }
+}
+
+window.closeMission = function() {
+  document.getElementById("modalOverlay").style.display = "none";
+  document.getElementById("gameModal").style.display = "none";
+}
+
+window.verifyMissionSolution = function() {
+  let passed = false;
+  const cart = document.getElementById("supplyCart");
+
+  if(currentActiveMission === 1) {
+    const val = parseFloat(document.getElementById("inputY1").value);
+    passed = (val === 4);
+
+    if(passed) {
+      cart.style.transform = "translate(220, 90)";
+    } else {
+      cart.style.transform = "translate(220, 170)";
+    }
+  } else if(currentActiveMission === 2) {
+    const val = parseFloat(document.getElementById("inputH").value);
+    passed = (val === 4);
+
+    if(passed) {
+      cart.style.transform = "translate(190, 130)";
+    } else {
+      cart.style.transform = "translate(300, 30)";
+    }
+  } else if(currentActiveMission === 3) {
+    const val = parseFloat(document.getElementById("inputK").value);
+    passed = (val === 5);
+
+    if(passed) {
+      cart.style.transform = "translate(340, 150)";
+    } else {
+      cart.style.transform = "translate(190, 180)";
+    }
+  }
+
+  setTimeout(() => {
+    if(passed) {
+      alert("✨ 拋物線參數校正成功！補給車沿二次函數弧線順利通過！");
+      closeMission();
+      
+      currentActiveMission++;
+      hudLoc.innerText = `STATION 0${currentActiveMission <= 3 ? currentActiveMission : 3}`;
+
+      document.querySelectorAll(".island-card").forEach(card => card.classList.remove("active", "current-stay"));
+      
+      if (currentActiveMission <= 3) {
+        const nextCard = document.getElementById(`island-${currentActiveMission}`);
+        nextCard.classList.remove("locked");
+        nextCard.classList.add("active", "current-stay");
+        
+        const nextBtn = document.getElementById(`btn-island-${currentActiveMission}`);
+        nextBtn.removeAttribute("disabled");
+        nextBtn.innerText = "開啟軌道鎖";
+      } else {
+        alert("🏆 恭喜！您已成功掌握二次函數頂點式與極值應用，順利全數通關【拋物線彈道師】！");
+      }
+    } else {
+      alert("❌ 算式錯誤！拋物線軌道無法對齊，請重新試算頂點與代入值！");
+      if(currentActiveMission === 1) cart.style.transform = "translate(40, 150)";
+      if(currentActiveMission === 2) cart.style.transform = "translate(50, 30)";
+      if(currentActiveMission === 3) cart.style.transform = "translate(30, 150)";
+    }
+  }, 1200);
+}
+
+// 動畫迴圈
+let pDir = 1;
+function animate() {
+  requestAnimationFrame(animate);
+  progress += 0.003 * pDir;
+  if(progress >= 1 || progress <= 0) pDir *= -1; // 在開闊拋物線上往復行駛
+  
+  updateTrain();
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+</script>
+
+</body>
+</html>

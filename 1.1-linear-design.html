@@ -180,11 +180,12 @@ svg {
 /* 遊戲彈窗 */
 .game-modal {
   display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: 95%; max-width: 600px; background: rgba(20, 23, 30, 0.98); border: 2px solid #00ffff;
+  width: 95%; max-width: 650px; background: rgba(20, 23, 30, 0.98); border: 2px solid #00ffff;
   border-radius: 12px; padding: 25px; z-index: 2000; box-shadow: 0 0 50px rgba(0,255,255,0.3);
 }
 .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.78); z-index:1999; backdrop-filter: blur(5px); }
-.btn-action { background: #00ffff; color: #1e222a; font-family: 'Orbitron'; font-weight: bold; border: none; padding: 12px 30px; cursor: pointer; margin-top: 15px; border-radius: 4px; width: 100%; font-size: 16px; }
+.btn-action { background: #00ffff; color: #1e222a; font-family: 'Orbitron'; font-weight: bold; border: none; padding: 12px 30px; cursor: pointer; margin-top: 15px; border-radius: 4px; width: 100%; font-size: 16px; transition: 0.2s;}
+.btn-action:hover { background: #7dcfff; box-shadow: 0 0 15px rgba(0,255,255,0.6); }
 .btn-close { background: transparent; color: #aaa; border: 1px solid #444; padding: 8px 15px; margin-top: 10px; cursor: pointer; border-radius: 4px; width: 100%; }
 
 .input-group {
@@ -196,7 +197,15 @@ svg {
 .input-field {
   width: 100%; padding: 10px; background: rgba(0,0,0,0.4); border: 1px solid #7dcfff; color: #00ffff; font-family: 'Orbitron', monospace; font-size: 16px; border-radius: 4px;
 }
+
+/* 物理車輛動畫 */
+.cart-animation {
+  transition: all 1.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
 </style>
+<!-- MathJax 用於標準數學公式渲染 -->
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
 
@@ -205,9 +214,9 @@ svg {
   <div class="dropdown">
     <button class="dropbtn">數學資料庫 ▼</button>
     <div class="dropdown-content">
-    <a href="#" onclick="location.href='1-sct-homepage.html'">> 三角函數</a>
-    <a href="#" onclick="location.href='1-lf-homepage.html'">> 線性函數</a>
-    <a href="#" onclick="location.href='game-homepage.html'">> 鐵道系統</a>
+      <a href="#" onclick="location.href='1-sct-homepage.html'">> 三角函數</a>
+      <a href="#" onclick="location.href='1-lf-homepage.html'">> 線性函數</a>
+      <a href="#" onclick="location.href='game-homepage.html'">> 鐵道系統</a>
     </div>
   </div>
 </div>
@@ -228,15 +237,22 @@ svg {
   <div class="lesson-row">
     <div class="panel-main">
       <div class="data-card">
-        <h1>01_ 核心概念：斜率與傾角 (m = tanθ)</h1>
-        <p>在一維與二維坐標系中，**一次函數（Linear Function）** 的圖形是一條直線。而直線最核心的特徵就是**「陡峭程度」**，也就是數學上的**斜率（Slope, $m$）**。</p>
+        <h1>01_ 核心概念：斜率與傾角 (m = tan θ)</h1>
+        <p>在一維與二維坐標系中，一次函數的圖形是一條直線。而直線最核心的特徵就是「陡峭程度」，也就是數學上的斜率（Slope, m）。</p>
         <ul>
-          <li><strong class="value-highlight">斜率定義：</strong>$m = rac{\Delta y}{\Delta x} = rac{y_2 - y_1}{x_2 - x_1}$ （垂直改變量 / 水平改變量）。</li>
-          <li><strong class="value-highlight">連結三角函數：</strong>若直線與 $x$ 軸正向的夾角為 $	heta$（傾角），則 <span style="color:#00ffff; font-size:20px; font-weight:bold;">$m = 	an	heta$</span>！</li>
-          <li><strong class="value-highlight">幾何意義：</strong>
-            $	heta < 90^\circ \Rightarrow m > 0$（爬升坡）；
-            $	heta = 0^\circ \Rightarrow m = 0$（水平平穩段）；
-            $	heta > 90^\circ \Rightarrow m < 0$（俯衝急降坡）。
+          <li>
+            <strong class="value-highlight">斜率定義：</strong>
+            \( m = \frac{\Delta y}{\Delta x} = \frac{y_2 - y_1}{x_2 - x_1} \) （垂直改變量 / 水平改變量）。
+          </li>
+          <li>
+            <strong class="value-highlight">連結三角函數：</strong>
+            若直線與 x 軸正向的夾角為 \(\theta\)（傾角），則 <span style="color:#00ffff; font-size:20px; font-weight:bold;">\( m = \tan \theta \)</span>！
+          </li>
+          <li>
+            <strong class="value-highlight">幾何意義：</strong>
+            \(\theta < 90^\circ \Rightarrow m > 0\)（爬升坡）；
+            \(\theta = 0^\circ \Rightarrow m = 0\)（水平平穩段）；
+            \(\theta > 90^\circ \Rightarrow m < 0\)（俯衝急降坡）。
           </li>
         </ul>
       </div>
@@ -261,7 +277,7 @@ svg {
   <div class="lesson-row">
     <div class="panel-main">
       <div class="data-card">
-        <h3>一次函數斜截式控制台：$y = mx + k$</h3>
+        <h3>一次函數斜截式控制台：\( y = mx + k \)</h3>
         <p style="color:#a6adc8; margin: 0;">拖曳下方滑桿，觀察直線在直角坐標系上的傾斜程度與上下平移變化：</p>
         
         <div class="control-console">
@@ -299,9 +315,9 @@ svg {
       <div class="data-card">
         <h3>高職數學 C 必考方程式型態對照表</h3>
         <ul>
-          <li><p><strong class="value-highlight">點斜式：$y - y_1 = m(x - x_1)$</strong><br>最適合用在雲霄飛車鋪設！已知軌道銜接點 $(x_1, y_1)$ 與爬升斜率 $m$，直接導出整段直線方程式。</p></li>
-          <li><p><strong class="value-highlight">斜截式：$y = mx + k$</strong><br>直接指出斜率 $m$ 與 $y$ 軸交點 $(0, k)$（雲霄飛車起跑初始高度）。</p></li>
-          <li><p><strong class="value-highlight">一般式：$Ax + By + C = 0$</strong><br>統測最常出現的選擇題型態，斜率為 <span style="color:#bb9af7;">$m = -rac{A}{B}$</span>（注意負號！）。</p></li>
+          <li><p><strong class="value-highlight">點斜式：\( y - y_1 = m(x - x_1) \)</strong><br>最適合用在雲霄飛車鋪設！已知軌道銜接點 \((x_1, y_1)\) 與爬升斜率 \(m\)，直接導出整段直線方程式。</p></li>
+          <li><p><strong class="value-highlight">斜截式：\( y = mx + k \)</strong><br>直接指出斜率 \(m\) 與 \(y\) 軸交點 \((0, k)\)（雲霄飛車起跑初始高度）。</p></li>
+          <li><p><strong class="value-highlight">一般式：\( Ax + By + C = 0 \)</strong><br>統測最常出現的選擇題型態，斜率為 <span style="color:#bb9af7;">\( m = -\frac{A}{B} \)</span>（注意負號！）。</p></li>
         </ul>
       </div>
     </div>
@@ -314,8 +330,8 @@ svg {
         </p>
         <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:6px; font-family:monospace; color:#00ffff; font-size:15px;">
           f(x) = <br>
-          &nbsp;&nbsp;1.5x + 10 , (0 ≤ x < 40) [爬升]<br>
-          &nbsp;&nbsp;70 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, (40 ≤ x < 60) [平穩]<br>
+          &nbsp;&nbsp;1.5x + 10 , (0 ≤ x &lt; 40) [爬升]<br>
+          &nbsp;&nbsp;70 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, (40 ≤ x &lt; 60) [平穩]<br>
           &nbsp;&nbsp;-2.0x + 190, (60 ≤ x ≤ 90) [俯衝]
         </div>
       </div>
@@ -329,7 +345,7 @@ svg {
   <div class="island-map-title">
     <h2>MISSION PROTOCOL : 【補給線定位師】實戰演練</h2>
     <p style="color: #a6adc8; max-width:800px; margin:0 auto;">
-      運用剛剛學會的「斜率 $m = 	an	heta$」、「點斜式」與「分段函數」，為補給車鋪設精準的線性軌道，穿梭於三個據點島嶼！
+      運用剛剛學會的「斜率 \( m = \tan \theta \)」、「點斜式」與「分段函數」，為補給車鋪設精準的線性軌道，穿梭於三個據點島嶼！
     </p>
   </div>
 
@@ -338,7 +354,7 @@ svg {
       <span class="island-icon">📡</span>
       <h3>關卡 01 . 前哨站連通</h3>
       <p style="font-size: 14px; color: #a6adc8;">
-      給定起點 A(2, 3) 與補給點 B(6, 11)<br>
+      動態產生兩點 A 與 B<br>
       請計算<span style="color:#00ffff; font-weight:bold;">正確斜率 m</span> 並鋪設直線軌道。
       </p>
       <button class="btn-enter-mission" id="btn-island-1" onclick="openMission(1)">開啟軌道鎖</button>
@@ -348,8 +364,8 @@ svg {
       <span class="island-icon">⚡</span>
       <h3>關卡 02 . 傾角發射台</h3>
       <p style="font-size: 14px; color: #a6adc8;">
-      出發點 P(4, 5)，給定坡度傾角 θ = 45°<br>
-      請利用<span style="color:#89b4fa; font-weight:bold;">點斜式</span>計算目標方程式。
+      出發點 P(x, y)，給定坡度傾角 θ = 45°<br>
+      請利用<span style="color:#89b4fa; font-weight:bold;">點斜式</span>計算目標截距 k。
       </p>
       <button class="btn-enter-mission" id="btn-island-2" onclick="openMission(2)" disabled>密碼鎖定中</button>
     </div>
@@ -358,7 +374,7 @@ svg {
       <span class="island-icon">🏔️</span>
       <h3>關卡 03 . 分段峽谷接力</h3>
       <p style="font-size: 14px; color: #a6adc8;">
-      峽谷地形障礙！需要連續設定兩段<br>
+      峽谷地形障礙！計算銜接點 x 的高程<br>
       <span style="color:#a6e3a1; font-weight:bold;">分段線性函數</span> 避開岩石順利抵達。
       </p>
       <button class="btn-enter-mission" id="btn-island-3" onclick="openMission(3)" disabled>密碼鎖定中</button>
@@ -373,14 +389,8 @@ svg {
   <p id="modalDesc" style="font-size: 15px; color: #a6adc8; margin-bottom: 15px;"></p>
   
   <div style="text-align:center; margin: 15px 0;">
-    <svg id="modalGameCanvas" width="100%" height="200" viewBox="0 0 400 200" style="background:rgba(0,0,0,0.5); border:1px solid #00ffff;">
-      <line x1="20" y1="180" x2="380" y2="180" stroke="#3b4261"/>
-      <line x1="20" y1="20" x2="20" y2="180" stroke="#3b4261"/>
-      <line id="modalPreviewLine" x1="20" y1="180" x2="380" y2="180" stroke="#00ffff" stroke-width="3" stroke-dasharray="5,5"/>
-      <circle id="pointA" cx="60" cy="150" r="6" fill="#00ffff"/>
-      <text id="textA" x="70" y="155" fill="#00ffff" font-size="14">A(2,3)</text>
-      <circle id="pointB" cx="300" cy="50" r="6" fill="#bb9af7"/>
-      <text id="textB" x="310" y="55" fill="#bb9af7" font-size="14">B(6,11)</text>
+    <svg id="modalGameCanvas" width="100%" height="220" viewBox="0 0 400 220" style="background:rgba(0,0,0,0.5); border:1px solid #00ffff;">
+      <!-- 動態畫布區 -->
     </svg>
   </div>
 
@@ -418,7 +428,7 @@ const hudLoc = document.getElementById('hud-loc');
 // --- 3D 雲霄飛車場景 (Three.js) ---
 const container = document.getElementById('track-container');
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xfba58c);  //改變背景-夕陽粉
+scene.background = new THREE.Color(0xfba58c);  //背景-夕陽粉
 scene.fog = new THREE.Fog(0xfba58c, 3000, 15000);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -426,7 +436,7 @@ renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
 
 const camera = new THREE.PerspectiveCamera(60, container.clientWidth/container.clientHeight, 1, 20000);
-camera.position.set(2500, 1500, 2200);
+camera.position.set(0, 1500, 3000);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -441,66 +451,58 @@ scene.add(new THREE.AmbientLight(0xffe4d6, 0.8)); // 暖色環境光
 const trainLight = new THREE.PointLight(0x00ffff, 400000, 1800);
 scene.add(trainLight);
 
-// 地面網格 -顏色修改
+// 地面網格
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(20000,20000), new THREE.MeshStandardMaterial({color:0x34495e, roughness:0.8}));
 ground.rotation.x = -Math.PI/2;
 scene.add(ground);
 const gridHelper = new THREE.GridHelper(20000, 100, 0x3b4261, 0x1a1d24);
 scene.add(gridHelper);
 
-// 3D 軌道生成
+// 3D 軌道生成 (改為真正的直線方程式 y = mx + k)
 let curve, frames;
 const trackGroup = new THREE.Group();
 scene.add(trackGroup);
 const numSamples = 2000;
 
-function buildDynamicLinearTrack(mVal) {
+function buildDynamicLinearTrack(mVal, kVal) {
   while(trackGroup.children.length > 0) {
     trackGroup.remove(trackGroup.children[0]);
   }
 
   const pts = [];
-  const baseLen = 2000;
-  
-  for(let i=0; i<=100; i++){
-    const t = i/100; 
-    const a = t * Math.PI * 2;
-    const x = Math.sin(a) * 1800 + Math.sin(a*2)*200;
-    const z = Math.cos(a) * 1500;
+  const trackSpan = 3000; // 軌道總延伸寬度
 
-    // 前半段根據輸入斜率生成一次函數坡道 y = m*x + k
-    let y = (i <= 30) 
-      ? 150 + (t * 100) * mVal * 15
-      : Math.max(120, 150 + 30 * mVal * 15 - (t-0.3)*800);
+  for(let i = 0; i <= 100; i++) {
+    const t = i / 100; 
+    // X 軸從 -1500 延伸到 +1500
+    const x = (t - 0.5) * trackSpan;
+    const z = 0;
+
+    // 將 y = mx + k 計算於 3D 座標系（加上 500 作為基準抬高點）
+    const y = (x * mVal * 0.8) + (kVal * 15) + 500;
     
-    pts.push(new THREE.Vector3(x, Math.max(100, y), z));
+    pts.push(new THREE.Vector3(x, Math.max(20, y), z));
   }
 
-  curve = new THREE.CatmullRomCurve3(pts, true, 'centripetal');
-  frames = curve.computeFrenetFrames(numSamples, true);
+  curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+  frames = curve.computeFrenetFrames(numSamples, false);
 
-  //修改軌道顏色color，改動
   const railMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.2, wireframe: false });
-  
-  // woodMat (枕木)：深褐色
-  const woodMat = new THREE.MeshStandardMaterial({
-    color: 0x5d4037,
-    roughness: 0.9
-  });
 
   for (let offset of [24, -24]) {
     const rPts = [];
-    for (let j=0; j<=numSamples; j++) {
-      rPts.push(curve.getPointAt(j/numSamples).add(frames.binormals[j].clone().multiplyScalar(offset)));
+    for (let j = 0; j <= numSamples; j++) {
+      rPts.push(curve.getPointAt(j / numSamples).add(frames.binormals[j].clone().multiplyScalar(offset)));
     }
-    trackGroup.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rPts, true), numSamples, 6, 8, true), railMat));
+    trackGroup.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rPts, false), numSamples, 6, 8, false), railMat));
   }
 
-  for(let i=0; i<numSamples; i+=30){
-    const p = curve.getPointAt(i/numSamples);
-    if(i % 120 === 0){
+  // 支柱生成
+  for(let i = 0; i <= numSamples; i += 80) {
+    const p = curve.getPointAt(i / numSamples);
+    if(p.y > 10) {
       const pillar = new THREE.Mesh(new THREE.CylinderGeometry(8, 16, p.y, 6), railMat);
-      pillar.position.set(p.x, p.y/2, p.z);
+      pillar.position.set(p.x, p.y / 2, p.z);
       trackGroup.add(pillar);
     }
   }
@@ -510,7 +512,6 @@ function buildDynamicLinearTrack(mVal) {
 const train = [];
 let progress = 0;
 
-//這裡改車廂顏色，看gemini
 function addCar(isFirst) {
   const car = new THREE.Mesh(
     new THREE.BoxGeometry(60, 40, 90), 
@@ -520,11 +521,11 @@ function addCar(isFirst) {
   train.push(car);
 }
 
-for(let i=0; i<4; i++) addCar(i===0);
+for(let i = 0; i < 4; i++) addCar(i === 0);
 
 function updateTrain() {
   train.forEach((car, i) => {
-    const cp = (progress - i * 0.025 + 1) % 1;
+    const cp = (progress - i * 0.03 + 1) % 1;
     const p = curve.getPointAt(cp);
     const idx = Math.floor(cp * numSamples);
 
@@ -544,19 +545,15 @@ function updateLinearFunction() {
   mValueDisplay.innerText = m >= 0 ? `+${m.toFixed(2)}` : m.toFixed(2);
   kValueDisplay.innerText = k >= 0 ? `+${k.toFixed(1)}` : k.toFixed(1);
   
-  // 計算傾角 theta = arctan(m)
   const rad = Math.atan(m);
   const deg = (rad * 180 / Math.PI).toFixed(1);
   thetaDisplay.innerText = deg;
 
-  // 更新方程式顯示
   const kSign = k >= 0 ? `+ ${k.toFixed(1)}` : `- ${Math.abs(k).toFixed(1)}`;
   equationDisplay.innerText = `y = ${m.toFixed(2)}x ${kSign}`;
   pointDisplay.innerText = k.toFixed(1);
   mDisplay.innerText = m.toFixed(2);
 
-  // 更新 2D SVG 直線 (範圍映照)
-  // SVG center at (150, 120)
   const x1 = 50, x2 = 250;
   const y1 = 120 - (m * (x1 - 150) + k);
   const y2 = 120 - (m * (x2 - 150) + k);
@@ -568,11 +565,9 @@ function updateLinearFunction() {
 
   interceptPoint.setAttribute('cy', 120 - k);
 
-  // HUD 提示更新
   hudSlope.innerText = `m = ${m >= 0 ? '+' : ''}${m.toFixed(2)} (θ=${deg}°)`;
 
-  // 重建 3D 軌道坡度
-  buildDynamicLinearTrack(m);
+  buildDynamicLinearTrack(m, k);
 }
 
 mSlider.addEventListener('input', updateLinearFunction);
@@ -580,8 +575,17 @@ kSlider.addEventListener('input', updateLinearFunction);
 
 updateLinearFunction();
 
-// --- 遊戲邏輯控制 ---
+// ==========================================================================
+// 動態題目生成器與 SVG/驗證邏輯
+// ==========================================================================
+
 let currentActiveMission = 1;
+let currentQuestionData = {}; // 儲存當前隨機產生的題目數據
+
+// 隨機整數產生器 (含 min, max)
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
 window.openMission = function(id) {
   if(id !== currentActiveMission) return;
@@ -589,51 +593,130 @@ window.openMission = function(id) {
   document.getElementById("gameModal").style.display = "block";
 
   const controlsDiv = document.getElementById("modalControls");
+  const svg = document.getElementById("modalGameCanvas");
   controlsDiv.innerHTML = "";
 
   if(id === 1) {
-    document.getElementById("modalTitle").innerText = "📡 關卡 01：計算連線斜率";
-    document.getElementById("modalDesc").innerText = "給定 A(2, 3) 與 B(6, 11)，請計算兩點之間的斜率 m = (y2 - y1) / (x2 - x1)。";
+    const x1 = getRandomInt(1, 4);
+    const y1 = getRandomInt(1, 5);
+    const m = getRandomInt(2, 5);
+    const dx = getRandomInt(2, 5);
+    const dy = m * dx;
+    const x2 = x1 + dx;
+    const y2 = y1 + dy;
+
+    currentQuestionData = { mAnswer: m };
+
+    document.getElementById("modalTitle").innerText = "📡 關卡 01：斜率向量鋪設";
+    document.getElementById("modalDesc").innerHTML = `給定起點 A(${x1}, ${y1}) 與終點 B(${x2}, ${y2})。請觀察直角坡度三角形的垂直改變量與水平改變量，計算斜率 \\( m = \\frac{\\Delta y}{\\Delta x} \\)。`;
     
     controlsDiv.innerHTML = `
       <div class="input-group">
-        <label>請輸入求出的斜率 m 數值：</label>
-        <input type="number" id="inputM" class="input-field" placeholder="例如：1.5" step="0.1">
+        <label>請輸入軌道爬升斜率 m 數值：</label>
+        <input type="number" id="inputM" class="input-field" placeholder="請輸入整數" step="1">
       </div>
     `;
     
-    // 設定預覽 SVG
-    document.getElementById("pointA").setAttribute("cx", "60");
-    document.getElementById("pointA").setAttribute("cy", "150");
-    document.getElementById("pointB").setAttribute("cx", "300");
-    document.getElementById("pointB").setAttribute("cy", "50");
-    document.getElementById("textA").innerText = "A(2, 3)";
-    document.getElementById("textB").innerText = "B(6, 11)";
+    svg.innerHTML = `
+      <line x1="30" y1="180" x2="370" y2="180" stroke="#3b4261" stroke-width="2"/>
+      <line x1="50" y1="20" x2="50" y2="190" stroke="#3b4261" stroke-width="2"/>
+      <polygon points="90,150 290,150 290,50" fill="rgba(0, 255, 255, 0.08)" stroke="#00ffff" stroke-dasharray="4"/>
+      <text x="160" y="170" fill="#7dcfff" font-size="14">Δx = ${x2} - ${x1} = ${dx}</text>
+      <text x="300" y="105" fill="#a6e3a1" font-size="14">Δy = ${y2} - ${y1} = ${dy}</text>
+
+      <line id="missionRail" x1="90" y1="150" x2="290" y2="50" stroke="#00ffff" stroke-width="3" stroke-dasharray="6,6"/>
+      <circle cx="90" cy="150" r="6" fill="#00ffff"/>
+      <text x="50" y="140" fill="#00ffff" font-weight="bold">A(${x1},${y1})</text>
+      <circle cx="290" cy="50" r="6" fill="#bb9af7"/>
+      <text x="280" y="35" fill="#bb9af7" font-weight="bold">B(${x2},${y2})</text>
+
+      <g id="supplyCart" class="cart-animation" transform="translate(80, 140)">
+        <rect x="0" y="0" width="20" height="12" fill="#ff9e3b" rx="2"/>
+        <circle cx="5" cy="12" r="3" fill="#ffffff"/>
+        <circle cx="15" cy="12" r="3" fill="#ffffff"/>
+      </g>
+    `;
   } 
   else if(id === 2) {
-    document.getElementById("modalTitle").innerText = "⚡ 關卡 02：點斜式軌道生成";
-    document.getElementById("modalDesc").innerText = "出發點 P(4, 5)，已知前方傾角 θ = 45° (故斜率 m = tan45° = 1)。請代入點斜式 y - 5 = 1(x - 4) 化簡為 y = mx + k，輸入截距 k 值。";
+    const px = getRandomInt(3, 8);
+    const k = getRandomInt(1, 6);
+    const py = px + k;
+
+    currentQuestionData = { kAnswer: k };
+
+    document.getElementById("modalTitle").innerText = "⚡ 關卡 02：雷射角度發射台";
+    document.getElementById("modalDesc").innerHTML = `發射台位於 P(${px}, ${py})，已知坡度傾角 θ = 45° (\\( m = \\tan 45^\\circ = 1 \\))。利用點斜式反向延伸，算出雷射光穿過 y 軸上的截距 k 數值。`;
     
     controlsDiv.innerHTML = `
       <div class="input-group">
-        <label>輸入化簡後的 y 截距 k 值 (y = 1.0x + k)：</label>
-        <input type="number" id="inputK" class="input-field" placeholder="例如：1">
+        <label>請輸入雷射光打在 y 軸上的截距 k 值 (y = 1.0x + k)：</label>
+        <input type="number" id="inputK" class="input-field" placeholder="請輸入截距 k">
       </div>
     `;
 
-    document.getElementById("textA").innerText = "P(4, 5)";
-    document.getElementById("textB").innerText = "目標發射區 (θ=45°)";
+    const yCenter = 100;
+    const yInterceptSVG = yCenter + (px - py) * 12;
+
+    svg.innerHTML = `
+      <line x1="20" y1="180" x2="380" y2="180" stroke="#3b4261" stroke-width="2"/>
+      <line x1="100" y1="20" x2="100" y2="190" stroke="#7dcfff" stroke-width="2"/>
+      <text x="70" y="30" fill="#7dcfff" font-weight="bold">y 軸</text>
+
+      <path d="M 220 100 L 260 100 A 40 40 0 0 0 248 72 Z" fill="rgba(187, 154, 247, 0.2)" stroke="#bb9af7"/>
+      <text x="260" y="90" fill="#bb9af7" font-size="12">θ=45°</text>
+
+      <line id="laserLine" x1="100" y1="${yInterceptSVG}" x2="340" y2="${yInterceptSVG - 120}" stroke="#ff0055" stroke-width="2" stroke-dasharray="4,4"/>
+      <circle cx="100" cy="${yInterceptSVG}" r="5" fill="#ff0055"/>
+      <text x="35" y="${yInterceptSVG + 5}" fill="#ff0055" font-weight="bold">k = ?</text>
+
+      <circle cx="220" cy="100" r="6" fill="#00ffff"/>
+      <text x="210" y="125" fill="#00ffff" font-weight="bold">P(${px},${py})</text>
+
+      <g id="supplyCart" class="cart-animation" transform="translate(210, 90)">
+        <rect x="0" y="0" width="20" height="12" fill="#ff9e3b" rx="2"/>
+        <circle cx="5" cy="12" r="3" fill="#ffffff"/>
+        <circle cx="15" cy="12" r="3" fill="#ffffff"/>
+      </g>
+    `;
   }
   else if(id === 3) {
-    document.getElementById("modalTitle").innerText = "🏔️ 關卡 03：分段線性軌道銜接";
-    document.getElementById("modalDesc").innerText = "第一段軌道方程式為 y = 2x + 1 (0 ≤ x < 5)。為確保軌道連續不斷裂，第二段軌道在 x = 5 時高度必須一致！請算出一時當 x = 5 時的高度 y 值。";
+    const m = getRandomInt(2, 4);
+    const c = getRandomInt(1, 5);
+    const xVal = getRandomInt(4, 8);
+    const targetY = m * xVal + c;
+
+    currentQuestionData = { yAnswer: targetY };
+
+    document.getElementById("modalTitle").innerText = "🏔️ 關卡 03：分段峽谷昇降接力";
+    document.getElementById("modalDesc").innerText = `第一段軌道方程式為 y = ${m}x + ${c} (0 ≤ x < ${xVal})。前方為峽谷！請計算升降平台在 x = ${xVal} 處的高度 y 值，讓軌道無縫銜接！`;
     
     controlsDiv.innerHTML = `
       <div class="input-group">
-        <label>輸入銜接點 x = 5 時的高度 y 值：</label>
-        <input type="number" id="inputY" class="input-field" placeholder="輸入算出的 y 值">
+        <label>輸入銜接平台在 x = ${xVal} 時的高度 y 值：</label>
+        <input type="number" id="inputY" class="input-field" placeholder="請計算對應 y 值">
       </div>
     `;
+
+    svg.innerHTML = `
+      <polygon points="170,140 230,140 230,220 170,220" fill="#0f1115" stroke="#3b4261"/>
+      <text x="180" y="180" fill="#ff0055" font-size="12">深層峽谷</text>
+
+      <line x1="30" y1="180" x2="170" y2="100" stroke="#00ffff" stroke-width="4"/>
+      <line id="bridgePlatform" x1="170" y1="100" x2="230" y2="100" stroke="#a6e3a1" stroke-width="5"/>
+      <text x="160" y="85" fill="#a6e3a1" font-size="12">x=${xVal} 銜接點</text>
+
+      <line x1="230" y1="100" x2="370" y2="40" stroke="#bb9af7" stroke-width="4"/>
+
+      <g id="supplyCart" class="cart-animation" transform="translate(20, 170)">
+        <rect x="0" y="0" width="20" height="12" fill="#ff9e3b" rx="2"/>
+        <circle cx="5" cy="12" r="3" fill="#ffffff"/>
+        <circle cx="15" cy="12" r="3" fill="#ffffff"/>
+      </g>
+    `;
+  }
+  
+  if (window.MathJax) {
+    MathJax.typesetPromise();
   }
 }
 
@@ -644,47 +727,71 @@ window.closeMission = function() {
 
 window.verifyMissionSolution = function() {
   let passed = false;
+  const cart = document.getElementById("supplyCart");
 
   if(currentActiveMission === 1) {
     const val = parseFloat(document.getElementById("inputM").value);
-    // m = (11 - 3) / (6 - 2) = 8 / 4 = 2
-    passed = (val === 2);
+    passed = (val === currentQuestionData.mAnswer);
+
+    if(passed) {
+      document.getElementById("missionRail").setAttribute("stroke-dasharray", "none");
+      cart.style.transform = "translate(280, 40)";
+    } else {
+      cart.style.transform = "translate(200, 20)";
+    }
   } else if(currentActiveMission === 2) {
     const val = parseFloat(document.getElementById("inputK").value);
-    // y - 5 = 1(x - 4) => y = x + 1 => k = 1
-    passed = (val === 1);
+    passed = (val === currentQuestionData.kAnswer);
+
+    if(passed) {
+      document.getElementById("laserLine").setAttribute("stroke", "#00ffff");
+      document.getElementById("laserLine").setAttribute("stroke-dasharray", "none");
+      cart.style.transform = "translate(330, 30)";
+    } else {
+      cart.style.transform = "translate(250, 170)";
+    }
   } else if(currentActiveMission === 3) {
     const val = parseFloat(document.getElementById("inputY").value);
-    // y = 2(5) + 1 = 11
-    passed = (val === 11);
-  }
+    passed = (val === currentQuestionData.yAnswer);
 
-  if(passed) {
-    alert("✨ 計算精準！線性軌道順利鋪設，補給車已發射通過！");
-    closeMission();
-    
-    currentActiveMission++;
-    hudLoc.innerText = `STATION 0${currentActiveMission <= 3 ? currentActiveMission : 3}`;
-
-    document.querySelectorAll(".island-card").forEach(card => card.classList.remove("active", "current-stay"));
-    
-    if (currentActiveMission <= 3) {
-      const nextCard = document.getElementById(`island-${currentActiveMission}`);
-      nextCard.classList.remove("locked");
-      nextCard.classList.add("active", "current-stay");
-      
-      const nextBtn = document.getElementById(`btn-island-${currentActiveMission}`);
-      nextBtn.removeAttribute("disabled");
-      nextBtn.innerText = "開啟軌道鎖";
+    if(passed) {
+      cart.style.transform = "translate(350, 30)";
     } else {
-      alert("🏆 恭喜！您已成功運用一次函數與斜率全數通關【補給線定位師】！準備好挑戰最終雲霄飛車大挑戰了嗎？");
+      cart.style.transform = "translate(190, 190)";
     }
-  } else {
-    alert("❌ 算式或數值有誤，軌道無法順利接合！請再重新試算一次。");
   }
+
+  setTimeout(() => {
+    if(passed) {
+      alert("✨ 算式正確！補給車順暢行駛通過，軌道連通成功！");
+      closeMission();
+      
+      currentActiveMission++;
+      hudLoc.innerText = `STATION 0${currentActiveMission <= 3 ? currentActiveMission : 3}`;
+
+      document.querySelectorAll(".island-card").forEach(card => card.classList.remove("active", "current-stay"));
+      
+      if (currentActiveMission <= 3) {
+        const nextCard = document.getElementById(`island-${currentActiveMission}`);
+        nextCard.classList.remove("locked");
+        nextCard.classList.add("active", "current-stay");
+        
+        const nextBtn = document.getElementById(`btn-island-${currentActiveMission}`);
+        nextBtn.removeAttribute("disabled");
+        nextBtn.innerText = "開啟軌道鎖";
+      } else {
+        alert("🏆 恭喜！您已成功運用一次函數與斜率全數通關【補給線定位師】！");
+      }
+    } else {
+      alert("❌ 參數校正失敗！補給車無法順利對齊軌道。請觀察畫面的幾何關係重新試算一次！");
+      if(currentActiveMission === 1) cart.style.transform = "translate(80, 140)";
+      if(currentActiveMission === 2) cart.style.transform = "translate(210, 90)";
+      if(currentActiveMission === 3) cart.style.transform = "translate(20, 170)";
+    }
+  }, 1200);
 }
 
-// 動畫迴圈
+// 動態繪圖迴圈
 function animate() {
   requestAnimationFrame(animate);
   progress = (progress + 0.003) % 1;
